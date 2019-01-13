@@ -12,10 +12,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import re
+import sys
 
+sys.path.insert(0, os.path.abspath('../..'))
+from dc_qiskit_qml._version import __version__
 
 # -- Project information -----------------------------------------------------
 
@@ -23,12 +25,6 @@ project = 'dc-qiskit-qml'
 copyright = '2019, Carsten Blank'
 author = 'Carsten Blank'
 
-import os
-import re
-import sys
-
-sys.path.insert(0, os.path.abspath('../..'))
-from dc_qiskit_qml._version import __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__
 
@@ -47,9 +43,16 @@ version = re.match(r'^(\d+\.\d+)', release).expand(r'\1')
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.ifconfig',
+    'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.inheritance_diagram',
+    # 'sphinx.ext.intersphinx',
+    # 'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.bibtex',
+    'edit_on_github'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -85,7 +88,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -185,9 +188,19 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+# the order in which autodoc lists the documented members
+autodoc_member_order = 'bysource'
+
+# inheritance_diagram graphviz attributes
+inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
+
+#autodoc_default_flags = ['members']
 autosummary_generate = True
+
+edit_on_github_project = 'carstenblank/dc-qiskit-qml'
+edit_on_github_branch = 'master/docs/source'
 
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+# intersphinx_mapping = {'https://docs.python.org/': None}

@@ -15,6 +15,7 @@ install:
   - python setup.py bdist_wheel
   - pip install dist/dc_qiskit_qml*.whl
 script:
+  - ls -la
   - make coverage
 after_success:
   - codecov

@@ -5,11 +5,13 @@ python:
   - 3.6
 env:
   - LOGGING=info
-install:
-  #- mkdir openblas && cd openblas && git clone https://github.com/xianyi/OpenBLAS.git && cd OpenBLAS && make && ls && cd ../..
-  - ls /usr/lib/
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install libopenblas-dev
   - pip install -r requirements.txt
+  - ln -s /usr/lib/libopenblas.a $PWD/libopenblas.a
   - pip install pytest pytest-cov wheel codecov
+install:
   - python setup.py bdist_wheel
   - pip install dist/dc_qiskit_qml*.whl
 script:

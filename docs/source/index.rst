@@ -48,23 +48,34 @@ Tutorials
 
 TODO
 
+
+Code Details
+=========
+
+TODO
+
 .. rst-class:: contents local topic
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Code details
 
 .. automodule:: dc_qiskit_qml.distance_based.hadamard._QmlHadamardNeighborClassifier
 
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state._QmlStateCircuitBuilder
+
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state._QmlGenericStateCircuitBuilder
+
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state._QmlBinaryDataStateCircuitBuilder
 
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state.sparsevector._QmlSparseVectorStatePreparation
+
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state.sparsevector._MöttönenStatePreparation
 
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state.cnot._CCXFactory
+
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state.cnot._CCXMöttönen
+
 .. automodule:: dc_qiskit_qml.distance_based.hadamard.state.cnot._CCXToffoli
 
 

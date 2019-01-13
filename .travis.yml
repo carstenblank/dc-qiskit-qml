@@ -8,8 +8,9 @@ env:
 before_install:
   - sudo apt-get update
   - sudo apt-get install libopenblas-dev
+  - ls -la /usr/lib | grep blas
   - pip install -r requirements.txt
-  - ln -s /usr/lib/libopenblas.a $PWD/libopenblas.a
+  - ln -s /usr/lib/libopenblas.a $(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")/libopenblas.a
   - pip install pytest pytest-cov wheel codecov
 install:
   - python setup.py bdist_wheel

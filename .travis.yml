@@ -6,7 +6,8 @@ python:
 env:
   - LOGGING=info
 install:
-  - mkdir openblas && cd openblas && git clone https://github.com/xianyi/OpenBLAS.git && cd OpenBLAS && make && ls && cd ../..
+  #- mkdir openblas && cd openblas && git clone https://github.com/xianyi/OpenBLAS.git && cd OpenBLAS && make && ls && cd ../..
+  - ls /usr/lib/
   - pip install -r requirements.txt
   - pip install pytest pytest-cov wheel codecov
   - python setup.py bdist_wheel

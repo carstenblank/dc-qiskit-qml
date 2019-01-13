@@ -6,6 +6,7 @@ python:
 env:
   - LOGGING=info
 install:
+  - apt install libopenblas-dev
   - pip install -r requirements.txt
   - pip install pytest pytest-cov wheel codecov
   - python setup.py bdist_wheel

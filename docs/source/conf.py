@@ -20,6 +20,10 @@ sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml'))
+sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml/distance_based/hadamard'))
+sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml/distance_based/hadamard/state'))
+sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml/distance_based/hadamard/state/cnot'))
+sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml/distance_based/hadamard/state/sparsevector'))
 from dc_qiskit_qml._version import __version__
 
 # -- Project information -----------------------------------------------------

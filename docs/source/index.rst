@@ -11,7 +11,7 @@ Welcome to dc-qiskit-qml's documentation!
 :Date: |today|
 
 
-.. include:: ../README.rst
+.. include:: ../../README.rst
   :start-after:	header-start-inclusion-marker-do-not-remove
   :end-before: header-end-inclusion-marker-do-not-remove
 

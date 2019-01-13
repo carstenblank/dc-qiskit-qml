@@ -1,0 +1,6 @@
+qiskit==0.7.0
+numpy
+scipy
+bitstring
+scikit_learn
+dc_qiskit_algorithms

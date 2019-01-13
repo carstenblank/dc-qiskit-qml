@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../dc_qiskit_qml'))
-from ...dc_qiskit_qml._version import __version__
+from dc_qiskit_qml._version import __version__
 
 # -- Project information -----------------------------------------------------
 

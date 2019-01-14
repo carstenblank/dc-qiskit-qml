@@ -6,6 +6,7 @@ python:
 env:
   - LOGGING=info
 before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
 #  - sudo apt-get install gcc-multilib
 #  - sudo apt-get install python3-numpy libopenblas-dev

@@ -28,7 +28,13 @@ info = {
     'url': 'http://data-cybernetics.com',
     'license': 'Apache License 2.0',
     'packages': [
-        'dc_qiskit_qml'
+        'dc_qiskit_qml',
+        'dc_qiskit_qml.distance_based',
+        'dc_qiskit_qml.distance_based.hadamard',
+        'dc_qiskit_qml.distance_based.hadamard.state',
+        'dc_qiskit_qml.distance_based.hadamard.state.cnot',
+        'dc_qiskit_qml.distance_based.hadamard.state.sparsevector',
+        'dc_qiskit_qml.feature_maps'
     ],
     'description': 'Machine learning (quantum-)algorithms with qiskit as basis',
     'long_description': open('README.rst').read(),

@@ -38,6 +38,7 @@ from math import sqrt
 from typing import List
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.extensions.standard import h
 from scipy import sparse
 
@@ -52,13 +53,14 @@ class QmlBinaryDataStateCircuitBuilder(QmlStateCircuitBuilder):
     From binary training and testing data creates the quantum state vector and applies a quantum algorithm to create a circuit.
     """
 
-    def __init__(self, ccx_factory):
-        # type: (QmlBinaryDataStateCircuitBuilder, CCXFactory) -> None
+    def __init__(self, ccx_factory, do_optimizations = True):
+        # type: (QmlBinaryDataStateCircuitBuilder, CCXFactory, bool) -> None
         """
         Creates the uniform amplitude state circuit builder
 
         :param ccx_factory: The multiple-controlled X-gate factory to be used
         """
+        self.do_optimizations = do_optimizations
         self.ccx_factory = ccx_factory  # type:CCXFactory
 
     def build_circuit(self, circuit_name, X_train, y_train, X_input):
@@ -158,18 +160,29 @@ class QmlBinaryDataStateCircuitBuilder(QmlStateCircuitBuilder):
                 if v == "1":
                     self.ccx_factory.ccx(qc, cnot_type_input, ancilla_and_index_regs, qlabel[i])
 
-        # TODO: hack
-        # this is a little of a hack:
-        # I expect a lot of redundant X gates here and want to get rid of them.
-        # It won't hurt either, so it's okay now. But there must be a better solution!
-        remove_list = []
-        for reg in ancilla_and_index_regs:
-            reg_data = [(i, d) for i, d in enumerate(qc.data) if reg in d.qargs]
-            for i in range(len(reg_data) - 1):
-                if reg_data[i][1].name == 'x' and reg_data[i][1].name == reg_data[i+1][1].name:
-                    remove_list.append(reg_data[i][0])
-                    remove_list.append(reg_data[i + 1][0])
-        qc.data = [d for i, d in enumerate(qc.data) if i not in remove_list]
+        stop = False
+        while not stop and self.do_optimizations:
+            dag = circuit_to_dag(qc)
+            dag.remove_all_ops_named("barrier")
+            ccx_gates = dag.get_named_nodes("ccx")
+            cx_gates = dag.get_named_nodes("cx")
+            x_gates = dag.get_named_nodes("x")
+            removable_nodes = []
+            for ccx_gate in ccx_gates.union(x_gates).union(cx_gates):
+                successor = list(dag.multi_graph.successors(ccx_gate))
+                if len(successor) == 1:
+                    node = dag.multi_graph.node[ccx_gate]
+                    successor_node = dag.multi_graph.node[successor[0]]
+                    if successor_node["name"] == node["name"]:
+                        removable_nodes.append(successor[0])
+                        removable_nodes.append(ccx_gate)
+                    print(end='')
+            for n in removable_nodes:
+                dag._remove_op_node(n)
+            if len(removable_nodes) > 0:
+                qc = dag_to_circuit(dag)
+            else:
+                stop = True
 
         return qc
 

@@ -136,6 +136,9 @@ class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
             branch = [q for q in qc.cregs if q.name == 'b'][0]
 
             # Classifier
+            # Instead of a Hadamard gate we want this to be parametrized
+            # use comments for now to toggle!
+            # standard.h(qc, ancilla)
             # Must be minus, as the IBMQX gate is implemented this way!
             standard.ry(qc, -self.theta, ancilla)
             standard.z(qc, ancilla)
@@ -176,16 +179,12 @@ class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
                         counts[k] = v
                     else:
                         counts[k] += v
-            log.info(counts)
-
-            if self.backend.name in ['ibmq_qasm_simulator', 'ibmqx2', 'ibmqx4', 'ibmqx5']:
-                counts = dict([(" ".join(reversed(k.split(' '))), v) for k, v in counts.items()])
-
+            log.debug(counts)
             answer = [
                 {'label': int(k.split(' ')[-1], 2), 'branch': int(k.split(' ')[-2], 2), 'count': v}
                 for k, v in counts.items()
             ]
-            log.debug(answer)
+            log.info(answer)
 
             answer_branch = [e for e in answer if self.classifier_state_factory.is_classifier_branch(e['branch'])]
             if len(answer_branch) == 0:
@@ -223,20 +222,6 @@ class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
         self._create_circuits(X)
 
         log.info("Compiling circuits...")
-
-        # TODO: think about this routine please...
-        # circuits = []
-        # iterations = int(math.ceil(self.shots / 8192))
-        # self.shots = 8192 * iterations
-        # while iterations > 0:
-        #     qc: QuantumCircuit
-        #     for qc in self._last_predict_circuits:
-        #         new_qc = QuantumCircuit(name="%s-%d" % (qc.name, iterations))
-        #         new_qc.regs = qc.regs
-        #         new_qc.data = qc.data
-        #         new_qc.definitions = qc.definitions
-        #         circuits.append(new_qc)
-        #     iterations -= 1
 
         qobj = qiskit.compile(self._last_predict_circuits,
                               backend=self.backend,

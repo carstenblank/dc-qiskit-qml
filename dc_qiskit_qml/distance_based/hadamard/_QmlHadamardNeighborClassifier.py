@@ -56,7 +56,7 @@ from qiskit.providers import BaseBackend, BaseJob, JobStatus
 from qiskit.qobj import Qobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
-from sklearn.base import ClassifierMixin
+from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
 from sklearn.neighbors.base import SupervisedIntegerMixin
 
 from .state import QmlStateCircuitBuilder
@@ -65,7 +65,7 @@ from ...feature_maps import FeatureMap
 log = logging.getLogger(__name__)
 
 
-class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
+class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, ClassifierMixin, TransformerMixin):
     """
     The Hadamard distance & majority based classifier implementing sci-kit learn's mechanism of fit/predict
     """
@@ -99,6 +99,9 @@ class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
         self.classifier_state_factory = classifier_circuit_factory  # type: QmlStateCircuitBuilder
         self.theta = np.pi/2 if theta is None else theta  # type: float
 
+    def transform(self, X, y='deprecated', copy=None):
+        return X
+
     def _fit(self, X):
         # type: (QmlHadamardNeighborClassifier, Iterable) -> None
         """
@@ -110,6 +113,8 @@ class QmlHadamardNeighborClassifier(SupervisedIntegerMixin, ClassifierMixin):
         log.debug("Setting training data:")
         for x, y in zip(self._X, self._y):
             log.debug("%s: %s", x, y)
+
+        return self
 
     def _create_circuits(self, unclassified_input):
         # type: (QmlHadamardNeighborClassifier, Iterable) -> None

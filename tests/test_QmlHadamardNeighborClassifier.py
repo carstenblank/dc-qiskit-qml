@@ -22,6 +22,8 @@ from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircui
 from dc_qiskit_qml.distance_based.hadamard.state import QmlGenericStateCircuitBuilder
 from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXToffoli
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MöttönenStatePreparation
+from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import FFQRAMStateVectorRoutine
+from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import QiskitNativeStatePreparation
 from dc_qiskit_qml.feature_maps import FeatureMap, NormedAmplitudeEncoding
 
 logging.basicConfig(format=logging.BASIC_FORMAT, level='INFO')
@@ -85,6 +87,60 @@ class QmlHadamardMöttönenTests(unittest.TestCase):
 
         predictions_match = [p == l for p, l in zip(y_predict, y_test)]
         self.assertTrue(all(predictions_match))
+
+        self.assertEqual(len(qml.last_predict_probability), 2)
+
+        input_1_probability = qml.last_predict_probability[0]
+        input_2_probability = qml.last_predict_probability[1]
+
+        self.assertAlmostEqual(input_1_probability, 0.629, delta=0.02)
+        self.assertAlmostEqual(input_2_probability, 0.547, delta=0.02)
+
+
+class QmlHadamardFFQramTests(unittest.TestCase):
+
+    def runTest(self):
+        log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
+        execution_backend: BaseBackend = qiskit.Aer.get_backend('qasm_simulator')
+
+        classifier_state_factory = QmlGenericStateCircuitBuilder(FFQRAMStateVectorRoutine())
+
+        qml = QmlHadamardNeighborClassifier(backend=execution_backend,
+                                            classifier_circuit_factory=classifier_state_factory,
+                                            feature_map=NormedAmplitudeEncoding(),
+                                            shots=100 * 8192)
+
+        y_predict, y_test = predict(qml)
+
+        predictions_match = [p == l for p, l in zip(y_predict, y_test)]
+        self.assertTrue(all(predictions_match), "The predictions must be correct.")
+
+        self.assertEqual(len(qml.last_predict_probability), 2)
+
+        input_1_probability = qml.last_predict_probability[0]
+        input_2_probability = qml.last_predict_probability[1]
+
+        self.assertAlmostEqual(input_1_probability, 0.629, delta=0.02)
+        self.assertAlmostEqual(input_2_probability, 0.547, delta=0.02)
+
+
+class QmlHadamardQiskitInitializerTests(unittest.TestCase):
+
+    def runTest(self):
+        log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
+        execution_backend: BaseBackend = qiskit.Aer.get_backend('qasm_simulator')
+
+        classifier_state_factory = QmlGenericStateCircuitBuilder(QiskitNativeStatePreparation())
+
+        qml = QmlHadamardNeighborClassifier(backend=execution_backend,
+                                            classifier_circuit_factory=classifier_state_factory,
+                                            feature_map=NormedAmplitudeEncoding(),
+                                            shots=100 * 8192)
+
+        y_predict, y_test = predict(qml)
+
+        predictions_match = [p == l for p, l in zip(y_predict, y_test)]
+        self.assertTrue(all(predictions_match), "The predictions must be correct.")
 
         self.assertEqual(len(qml.last_predict_probability), 2)
 

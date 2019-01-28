@@ -101,7 +101,7 @@ class QmlHadamardFFQramTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
-        execution_backend: BaseBackend = qiskit.Aer.get_backend('qasm_simulator')
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(FFQRAMStateVectorRoutine())
 
@@ -128,7 +128,7 @@ class QmlHadamardQiskitInitializerTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
-        execution_backend: BaseBackend = qiskit.Aer.get_backend('qasm_simulator')
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(QiskitNativeStatePreparation())
 

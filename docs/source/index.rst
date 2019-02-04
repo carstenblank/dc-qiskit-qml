@@ -50,7 +50,7 @@ TODO
 
 
 Code Details
-=========
+=============
 
 TODO
 
@@ -80,7 +80,7 @@ TODO
 
 
 Indices and tables
-==================
+====================
 
 * :ref:`genindex`
 * :ref:`modindex`

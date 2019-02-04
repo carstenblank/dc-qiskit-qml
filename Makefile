@@ -42,11 +42,11 @@ clean:
 	rm -rf .coverage coverage_html_report/
 
 docs:
-	make -C doc html
+	make -C docs html
 
 .PHONY : clean-docs
 clean-docs:
-	make -C doc clean
+	make -C docs clean
 
 test:
 	$(PYTHON) $(TESTRUNNER)

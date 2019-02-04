@@ -9,7 +9,7 @@ Data Cybernetics qiskit-qml
     :alt: Codecov coverage
     :target: https://codecov.io/gh/carstenblank/dc-qiskit-qml
 
-.. image:: https://api.codacy.com/project/badge/Grade/820b74d1739b4d31b6395bfd8469b3bb
+.. image:: https://img.shields.io/codacy/grade/820b74d1739b4d31b6395bfd8469b3bb.svg?style=for-the-badge
     :alt: Codacy grade
     :target: https://www.codacy.com/app/carstenblank/dc-qiskit-qml?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=carstenblank/dc-qiskit-qml&amp;utm_campaign=Badge_Grade
 

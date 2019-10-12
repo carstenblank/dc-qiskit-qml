@@ -27,9 +27,12 @@ class FFQRAMStateVectorRoutine(QmlSparseVectorStatePreparation):
         # type: (FFQRAMStateVectorRoutine, QuantumCircuit, sparse.dok_matrix) -> QuantumCircuit
         bus = [reg[i] for reg in qc.qregs for i in range(reg.size)]
         ffqram_reg = QuantumRegister(1, "ffqram_reg")
+        qc.add_register(ffqram_reg)
+
+        # FIXME (one day) hack the branch register from 1 bit to 2 bits
         branch = [reg for reg in qc.cregs if reg.name == "b"][0]
         branch.size = 2
-        qc.add_register(ffqram_reg)
+        branch._bits = [branch.bit_type(branch, idx) for idx in range(branch.size)]
 
         # Create DB
         db = FFQramDb()

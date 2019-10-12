@@ -9,12 +9,14 @@
 import logging
 import sys
 import unittest
+from typing import Dict
 
 import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.circuit.measure import measure
 from qiskit.providers import BaseBackend, BaseJob
+from qiskit.providers.aer import AerJob
 from scipy import sparse
 
 from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircuitBuilder
@@ -158,9 +160,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type: BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute(qc2, execution_backend, shots=8192)
+        counts = job.result().get_counts()  # type: dict
 
         self.assertListEqual(sorted(counts.keys()), sorted(['0 0100111010 0 0', '0 0100001111 0 1', '1 0100100100 1 0', '1 0100001111 1 1']))
 
@@ -315,9 +316,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qc.qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type: BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute([qc2], execution_backend, shots=8192)
+        counts = job.result().get_counts()  # type: dict
 
         self.assertListEqual(sorted(['0 0100111010 0 0', '0 0100001111 0 1', '1 0100100100 1 0', '1 0100001111 1 1']), sorted(counts.keys()))
 
@@ -366,9 +366,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type. BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute(qc2, execution_backend, shots=8192)  # type: AerJob
+        counts = job.result().get_counts()  # type: Dict[str, int]
 
         self.assertListEqual(
             sorted([

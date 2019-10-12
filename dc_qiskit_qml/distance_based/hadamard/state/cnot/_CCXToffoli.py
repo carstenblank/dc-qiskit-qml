@@ -80,7 +80,6 @@ class CCXToffoli(CCXFactory):
                 x(qc, control_qubits[i])
         barrier(qc)
 
-        ccx_ancilla = None  # type: QuantumRegister
         if len(control_qubits) == 1: # This is just the normal CNOT
             cx(qc, control_qubits[0], tgt)
         elif len(control_qubits) == 2: # This is the simple Toffoli
@@ -88,10 +87,10 @@ class CCXToffoli(CCXFactory):
         else:
             # Create ancilla qubit or take the one that is already there
             if 'ccx_ancilla' not in [q.name for q in qc.qregs]:
-                ccx_ancilla = QuantumRegister(len(control_qubits) - 1, 'ccx_ancilla')
+                ccx_ancilla = QuantumRegister(len(control_qubits) - 1, 'ccx_ancilla')  # type: QuantumRegister
                 qc.add_register(ccx_ancilla)
             else:
-                ccx_ancilla = [q for q in qc.qregs if q.name == 'ccx_ancilla'][0]
+                ccx_ancilla = [q for q in qc.qregs if q.name == 'ccx_ancilla'][0]  # type: QuantumRegister
 
             # Algorithm
             ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])

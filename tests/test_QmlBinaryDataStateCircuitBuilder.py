@@ -9,12 +9,14 @@
 import logging
 import sys
 import unittest
+from typing import Dict
 
 import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.circuit.measure import measure
 from qiskit.providers import BaseBackend, BaseJob
+from qiskit.providers.aer import AerJob
 from scipy import sparse
 
 from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircuitBuilder
@@ -31,7 +33,7 @@ logger.addHandler(stream_handler)
 
 def extract_gate_info(qc, index):
     # type: (QuantumCircuit, int) -> list
-    return [qc.data[index].name, qc.data[index].param, str(qc.data[index].qargs[-1])]
+    return [qc.data[index][0].name, qc.data[index][0].params, str(qc.data[index][1][-1])]
 
 
 class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
@@ -65,37 +67,37 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         self.assertIsNotNone(qc.data)
         self.assertEqual(30, len(qc.data))
 
-        self.assertListEqual(["h"], [qc.data[0].name])
-        self.assertListEqual(["h"], [qc.data[1].name])
+        self.assertListEqual(["h"], [qc.data[0][0].name])
+        self.assertListEqual(["h"], [qc.data[1][0].name])
 
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 2))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 3))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 4))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 8)"], extract_gate_info(qc, 5))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 10)"], extract_gate_info(qc, 6))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 11)"], extract_gate_info(qc, 7))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(18, 'f^S'), 15)"], extract_gate_info(qc, 8))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 0)"], extract_gate_info(qc, 9))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 2)"], extract_gate_info(qc, 10))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 11))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 12))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 6)"], extract_gate_info(qc, 13))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 14))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(18, 'f^S'), 14)"], extract_gate_info(qc, 15))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 16))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(18, 'f^S'), 10)"], extract_gate_info(qc, 17))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(18, 'f^S'), 11)"], extract_gate_info(qc, 18))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(18, 'f^S'), 13)"], extract_gate_info(qc, 19))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(18, 'f^S'), 16)"], extract_gate_info(qc, 20))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 21))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 0)"], extract_gate_info(qc, 22))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 2)"], extract_gate_info(qc, 23))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 24))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 25))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 6)"], extract_gate_info(qc, 26))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 27))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(18, 'f^S'), 14)"], extract_gate_info(qc, 28))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 29))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 2))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 3))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 4))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 8)"], extract_gate_info(qc, 5))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 10)"], extract_gate_info(qc, 6))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 11)"], extract_gate_info(qc, 7))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(18, 'f^S'), 15)"], extract_gate_info(qc, 8))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 0)"], extract_gate_info(qc, 9))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 2)"], extract_gate_info(qc, 10))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 11))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 12))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 6)"], extract_gate_info(qc, 13))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 14))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(18, 'f^S'), 14)"], extract_gate_info(qc, 15))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 16))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(18, 'f^S'), 10)"], extract_gate_info(qc, 17))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(18, 'f^S'), 11)"], extract_gate_info(qc, 18))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(18, 'f^S'), 13)"], extract_gate_info(qc, 19))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(18, 'f^S'), 16)"], extract_gate_info(qc, 20))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 21))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 0)"], extract_gate_info(qc, 22))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 2)"], extract_gate_info(qc, 23))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 3)"], extract_gate_info(qc, 24))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 4)"], extract_gate_info(qc, 25))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 6)"], extract_gate_info(qc, 26))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 7)"], extract_gate_info(qc, 27))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(18, 'f^S'), 14)"], extract_gate_info(qc, 28))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 29))
 
     def test_two(self):
 
@@ -125,29 +127,29 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         self.assertIsNotNone(qc.data)
         self.assertEqual(len(qc.data), 22)
 
-        self.assertListEqual(["h"], [qc.data[0].name])
-        self.assertListEqual(["h"], [qc.data[1].name])
+        self.assertListEqual(["h"], [qc.data[0][0].name])
+        self.assertListEqual(["h"], [qc.data[1][0].name])
 
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 2))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 3))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(10, 'f^S'), 4)"], extract_gate_info(qc, 4))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(10, 'f^S'), 5)"], extract_gate_info(qc, 5))
-        self.assertListEqual(["ccx_uni_rot", [0], "(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 6))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(10, 'f^S'), 0)"], extract_gate_info(qc, 7))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 8))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 9))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 10))
-        self.assertListEqual(["ccx_uni_rot", [1], "(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 11))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 12))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(10, 'f^S'), 5)"], extract_gate_info(qc, 13))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 14))
-        self.assertListEqual(["ccx_uni_rot", [2], "(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 15))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(10, 'f^S'), 0)"], extract_gate_info(qc, 16))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 17))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 18))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 19))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 20))
-        self.assertListEqual(["ccx_uni_rot", [3], "(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 21))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 2))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 3))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(10, 'f^S'), 4)"], extract_gate_info(qc, 4))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(10, 'f^S'), 5)"], extract_gate_info(qc, 5))
+        self.assertListEqual(["ccx_uni_rot", [0], "Qubit(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 6))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(10, 'f^S'), 0)"], extract_gate_info(qc, 7))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 8))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 9))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 10))
+        self.assertListEqual(["ccx_uni_rot", [1], "Qubit(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 11))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 12))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(10, 'f^S'), 5)"], extract_gate_info(qc, 13))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 14))
+        self.assertListEqual(["ccx_uni_rot", [2], "Qubit(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 15))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(10, 'f^S'), 0)"], extract_gate_info(qc, 16))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(10, 'f^S'), 1)"], extract_gate_info(qc, 17))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(10, 'f^S'), 2)"], extract_gate_info(qc, 18))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(10, 'f^S'), 3)"], extract_gate_info(qc, 19))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(10, 'f^S'), 8)"], extract_gate_info(qc, 20))
+        self.assertListEqual(["ccx_uni_rot", [3], "Qubit(QuantumRegister(1, 'l^q'), 0)"], extract_gate_info(qc, 21))
 
         qregs = qc.qregs
         cregs = [ClassicalRegister(qr.size, 'c' + qr.name) for qr in qregs]
@@ -158,9 +160,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type: BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute(qc2, execution_backend, shots=8192)
+        counts = job.result().get_counts()  # type: dict
 
         self.assertListEqual(sorted(counts.keys()), sorted(['0 0100111010 0 0', '0 0100001111 0 1', '1 0100100100 1 0', '1 0100001111 1 1']))
 
@@ -315,9 +316,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qc.qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type: BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute([qc2], execution_backend, shots=8192)
+        counts = job.result().get_counts()  # type: dict
 
         self.assertListEqual(sorted(['0 0100111010 0 0', '0 0100001111 0 1', '1 0100100100 1 0', '1 0100001111 1 1']), sorted(counts.keys()))
 
@@ -366,9 +366,8 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
             measure(qc2, qregs[i], cregs[i])
 
         execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
-        qobj = qiskit.compile([qc2], execution_backend, shots=8192)
-        result = execution_backend.run(qobj)  # type. BaseJob
-        counts = result.result().get_counts()  # type: dict
+        job = qiskit.execute(qc2, execution_backend, shots=8192)  # type: AerJob
+        counts = job.result().get_counts()  # type: Dict[str, int]
 
         self.assertListEqual(
             sorted([

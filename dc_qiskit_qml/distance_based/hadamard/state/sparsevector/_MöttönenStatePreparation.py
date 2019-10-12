@@ -32,7 +32,7 @@ MöttönenStatePreparation
     :members:
 
 """
-from dc_qiskit_algorithms.MöttönenStatePrep import state_prep_möttönen
+from dc_qiskit_algorithms.MöttönenStatePreparation import state_prep_möttönen
 from qiskit import QuantumCircuit
 from scipy import sparse
 

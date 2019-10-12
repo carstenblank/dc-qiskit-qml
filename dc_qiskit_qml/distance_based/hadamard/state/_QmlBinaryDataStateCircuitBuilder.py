@@ -39,7 +39,8 @@ from typing import List
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.converters import circuit_to_dag, dag_to_circuit
-from qiskit.extensions.standard import h
+from qiskit.dagcircuit import DAGNode
+from qiskit.extensions.standard.h import h
 from scipy import sparse
 
 from . import QmlStateCircuitBuilder
@@ -164,21 +165,17 @@ class QmlBinaryDataStateCircuitBuilder(QmlStateCircuitBuilder):
         while not stop and self.do_optimizations:
             dag = circuit_to_dag(qc)
             dag.remove_all_ops_named("barrier")
-            ccx_gates = dag.get_named_nodes("ccx")
-            cx_gates = dag.get_named_nodes("cx")
-            x_gates = dag.get_named_nodes("x")
+            gates = dag.named_nodes("ccx", "cx", "x")  # type: List[DAGNode]
             removable_nodes = []
-            for ccx_gate in ccx_gates.union(x_gates).union(cx_gates):
-                successor = list(dag.multi_graph.successors(ccx_gate))
+            for ccx_gate in gates:
+                successor = list(dag.successors(ccx_gate))  # type: List[DAGNode]
                 if len(successor) == 1:
-                    node = dag.multi_graph.node[ccx_gate]
-                    successor_node = dag.multi_graph.node[successor[0]]
-                    if successor_node["name"] == node["name"]:
+                    if successor[0].name == ccx_gate.name:
                         removable_nodes.append(successor[0])
                         removable_nodes.append(ccx_gate)
                     print(end='')
             for n in removable_nodes:
-                dag._remove_op_node(n)
+                dag.remove_op_node(n)
             if len(removable_nodes) > 0:
                 qc = dag_to_circuit(dag)
             else:

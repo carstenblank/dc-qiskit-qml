@@ -37,7 +37,7 @@ CCXMöttönen
 import logging
 from typing import List, Union, Tuple
 
-from dc_qiskit_algorithms.UniformRotation import ccx
+from dc_qiskit_algorithms.UniformRotation import ccx_uni_rot
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.register import Register
 
@@ -62,5 +62,5 @@ class CCXMöttönen(CCXFactory):
         :param tgt: the target to be applied the controlled X gate on
         :return: the circuit after application of the gate
         """
-        ccx(qc, conditial_case, control_qubits, tgt)
+        ccx_uni_rot(qc, conditial_case, control_qubits, tgt)
         return qc

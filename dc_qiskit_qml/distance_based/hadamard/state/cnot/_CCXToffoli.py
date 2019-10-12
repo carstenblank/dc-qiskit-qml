@@ -43,10 +43,10 @@ from typing import List, Union, Tuple
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.register import Register
-from qiskit.extensions import standard
-from qiskit.extensions.standard import ccx
-from qiskit.extensions.standard import cx
-from qiskit.extensions.standard import x
+from qiskit.extensions.standard.barrier import barrier
+from qiskit.extensions.standard.ccx import ccx
+from qiskit.extensions.standard.cx import cx
+from qiskit.extensions.standard.x import x
 
 from . import CCXFactory
 
@@ -78,9 +78,8 @@ class CCXToffoli(CCXFactory):
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':
                 x(qc, control_qubits[i])
-        standard.barrier(qc)
+        barrier(qc)
 
-        ccx_ancilla = None  # type: QuantumRegister
         if len(control_qubits) == 1: # This is just the normal CNOT
             cx(qc, control_qubits[0], tgt)
         elif len(control_qubits) == 2: # This is the simple Toffoli
@@ -88,10 +87,10 @@ class CCXToffoli(CCXFactory):
         else:
             # Create ancilla qubit or take the one that is already there
             if 'ccx_ancilla' not in [q.name for q in qc.qregs]:
-                ccx_ancilla = QuantumRegister(len(control_qubits) - 1, 'ccx_ancilla')
+                ccx_ancilla = QuantumRegister(len(control_qubits) - 1, 'ccx_ancilla')  # type: QuantumRegister
                 qc.add_register(ccx_ancilla)
             else:
-                ccx_ancilla = [q for q in qc.qregs if q.name == 'ccx_ancilla'][0]
+                ccx_ancilla = [q for q in qc.qregs if q.name == 'ccx_ancilla'][0]  # type: QuantumRegister
 
             # Algorithm
             ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])
@@ -104,7 +103,7 @@ class CCXToffoli(CCXFactory):
                 ccx(qc, control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
             ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])
 
-        standard.barrier(qc)
+        barrier(qc)
         # Undo the conditional case
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':

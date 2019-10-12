@@ -49,13 +49,13 @@ from typing import List, Union, Optional, Iterable, Sized
 
 import numpy as np
 import qiskit
-import qiskit.extensions.standard as standard
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.measure import measure
 from qiskit.providers import BaseBackend, BaseJob, JobStatus
 from qiskit.qobj import Qobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
+from qiskit.transpiler import CouplingMap
 from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
 from sklearn.neighbors.base import SupervisedIntegerMixin
 
@@ -70,9 +70,10 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
     The Hadamard distance & majority based classifier implementing sci-kit learn's mechanism of fit/predict
     """
 
-    def __init__(self, feature_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None, basis_gates=None,
+    def __init__(self, feature_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None,
+                 basis_gates=None,
                  theta=None):
-        # type: (FeatureMap, QmlStateCircuitBuilder, BaseBackend, int, list, str, Optional[float]) -> None
+        # type: (FeatureMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float]) -> None
         """
         Create the classifier
 
@@ -86,10 +87,10 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         :param theta: an advanced feature that generalizes the "Hadamard" gate as a rotation with this angle
         """
         self.feature_map = feature_map  # type: FeatureMap
-        self.basis_gates = basis_gates  # type: str
+        self.basis_gates = basis_gates  # type: List[str]
         self.shots = shots  # type: int
         self.backend = backend  # type: BaseBackend
-        self.coupling_map = coupling_map  # type: list
+        self.coupling_map = coupling_map  # type: CouplingMap
         self._X = np.asarray([])  # type: np.ndarray
         self.last_predict_X = None
         self.last_predict_label = None
@@ -97,13 +98,13 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         self._last_predict_circuits = []  # type: List[QuantumCircuit]
         self.last_predict_p_acc = []  # type: List[float]
         self.classifier_state_factory = classifier_circuit_factory  # type: QmlStateCircuitBuilder
-        self.theta = np.pi/2 if theta is None else theta  # type: float
+        self.theta = np.pi / 2 if theta is None else theta  # type: float
 
     def transform(self, X, y='deprecated', copy=None):
         return X
 
     def _fit(self, X):
-        # type: (QmlHadamardNeighborClassifier, Iterable) -> None
+        # type: (QmlHadamardNeighborClassifier, Iterable) -> QmlHadamardNeighborClassifier
         """
         Internal fit method just saves the train sample set
 
@@ -145,13 +146,13 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             # use comments for now to toggle!
             # standard.h(qc, ancilla)
             # Must be minus, as the IBMQX gate is implemented this way!
-            standard.ry(qc, -self.theta, ancilla)
-            standard.z(qc, ancilla)
+            qc.ry(-self.theta, ancilla)
+            qc.z(ancilla)
 
             # Make sure measurements aren't shifted around
             # This would have some consequences as no gates
             # are allowed after a measurement.
-            standard.barrier(qc)
+            qc.barrier()
 
             # The correct label is on ancilla branch |0>!
             measure(qc, ancilla[0], branch[0])
@@ -175,7 +176,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             # Aggregate Counts
             experiment = None  # type: ExperimentResult
             experiment_names = [experiment.header.name for experiment in result.results
-                                if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name ]
+                                if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name]
             counts = {}  # type: dict
             for name in experiment_names:
                 c = result.get_counts(name)  # type: dict
@@ -209,7 +210,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
 
         return self.last_predict_label
 
-    def predict_qasm_only(self,  X):
+    def predict_qasm_only(self, X):
         # type: (QmlHadamardNeighborClassifier, Union[Sized, Iterable]) -> Qobj
         """
         Instead of predicting straight away returns the Qobj, the command object for executing
@@ -228,11 +229,13 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
 
         log.info("Compiling circuits...")
 
-        qobj = qiskit.compile(self._last_predict_circuits,
-                              backend=self.backend,
-                              coupling_map=self.coupling_map,
-                              shots=self.shots,
-                              basis_gates=self.basis_gates)  # type: Qobj
+        transpiled_qc = qiskit.transpile(self._last_predict_circuits,
+                                        backend=self.backend,
+                                        coupling_map=self.coupling_map,
+                                        basis_gates=self.basis_gates)  # type: QuantumCircuit
+
+        qobj = qiskit.assemble(transpiled_qc, backend=self.backend, shots=self.shots)
+
         return qobj
 
     def predict(self, X, do_async=False):
@@ -325,6 +328,7 @@ class AsyncPredictJob(object):
     """
     Wrapper for a qiskit BaseJob and classification experiments
     """
+
     def __init__(self, input, job, qml):
         # type: (AsyncPredictJob, Sized, BaseJob, QmlHadamardNeighborClassifier) -> None
         """

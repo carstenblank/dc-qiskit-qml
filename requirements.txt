@@ -1,6 +1,4 @@
-qiskit==0.7.0
-qiskit-terra==0.7.1
-qiskit-aer==0.1.1
+qiskit
 numpy
 scipy
 bitstring

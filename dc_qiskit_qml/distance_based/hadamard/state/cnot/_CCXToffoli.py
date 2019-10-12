@@ -43,10 +43,10 @@ from typing import List, Union, Tuple
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.register import Register
-from qiskit.extensions import standard
-from qiskit.extensions.standard import ccx
-from qiskit.extensions.standard import cx
-from qiskit.extensions.standard import x
+from qiskit.extensions.standard.barrier import barrier
+from qiskit.extensions.standard.ccx import ccx
+from qiskit.extensions.standard.cx import cx
+from qiskit.extensions.standard.x import x
 
 from . import CCXFactory
 
@@ -78,7 +78,7 @@ class CCXToffoli(CCXFactory):
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':
                 x(qc, control_qubits[i])
-        standard.barrier(qc)
+        barrier(qc)
 
         ccx_ancilla = None  # type: QuantumRegister
         if len(control_qubits) == 1: # This is just the normal CNOT
@@ -104,7 +104,7 @@ class CCXToffoli(CCXFactory):
                 ccx(qc, control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
             ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])
 
-        standard.barrier(qc)
+        barrier(qc)
         # Undo the conditional case
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':

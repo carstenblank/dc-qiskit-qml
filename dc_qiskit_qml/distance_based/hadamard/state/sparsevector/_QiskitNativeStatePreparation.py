@@ -32,9 +32,6 @@ MöttönenStatePreparation
     :members:
 
 """
-from qiskit.extensions import standard, quantum_initializer
-
-from dc_qiskit_algorithms.MöttönenStatePrep import state_prep_möttönen
 from qiskit import QuantumCircuit
 from scipy import sparse
 
@@ -58,7 +55,7 @@ class QiskitNativeStatePreparation(QmlSparseVectorStatePreparation):
         # State Prep
         register = [reg[i] for reg in qregs for i in range(0, reg.size)]
         state = state_vector.toarray()[:,0]
-        quantum_initializer._initializer.initialize(qc, state, register)
+        qc.initialize(state, register)
 
         return qc
 

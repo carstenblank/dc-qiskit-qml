@@ -145,13 +145,13 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             # use comments for now to toggle!
             # standard.h(qc, ancilla)
             # Must be minus, as the IBMQX gate is implemented this way!
-            standard.ry(qc, -self.theta, ancilla)
-            standard.z(qc, ancilla)
+            qc.ry(-self.theta, ancilla)
+            qc.z(ancilla)
 
             # Make sure measurements aren't shifted around
             # This would have some consequences as no gates
             # are allowed after a measurement.
-            standard.barrier(qc)
+            qc.barrier()
 
             # The correct label is on ancilla branch |0>!
             measure(qc, ancilla[0], branch[0])

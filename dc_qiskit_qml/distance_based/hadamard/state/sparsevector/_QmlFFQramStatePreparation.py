@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 # Copyright 2018 Carsten Blank
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +16,7 @@
 # limitations under the License.
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.measure import measure
-from qiskit.extensions import standard
 from scipy import sparse
-import numpy as np
 
 from dc_qiskit_algorithms.FlipFlopQuantumRam import FFQramDb, add_vector
 from ._QmlSparseVectorStatePreparation import QmlSparseVectorStatePreparation
@@ -39,10 +38,10 @@ class FFQRAMStateVectorRoutine(QmlSparseVectorStatePreparation):
 
         # State Prep
         for r in bus:
-            standard.h(qc, r)
+            qc.h(r)
         db.add_to_circuit(qc, bus, ffqram_reg[0])
 
-        standard.barrier(qc)
+        qc.barrier()
         measure(qc, ffqram_reg[0], branch[1])
 
         return qc

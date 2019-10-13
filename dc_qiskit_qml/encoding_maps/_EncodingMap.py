@@ -14,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ._FeatureMap import FeatureMap
-from ._FixedLengthQubitEncoding import FixedLengthQubitEncoding
-from ._Float32QubitEncoding import Float32QubitEncoding
-from ._IdentityFeatureMap import IdentityFeatureMap
-from ._NormedAmplitudeEncoding import NormedAmplitudeEncoding
+from typing import List
+
+from scipy import sparse
+
+
+class EncodingMap(object):
+    def map(self, input_vector):
+        # type: (EncodingMap, List[complex]) -> sparse.dok_matrix
+        pass

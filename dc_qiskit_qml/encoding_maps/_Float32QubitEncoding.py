@@ -14,25 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
 
-import logging
-
+import bitstring
 import numpy as np
 from scipy import sparse
 
-from . import FeatureMap
-
-log = logging.getLogger('VectorAmplitudeEncoding')
+from . import EncodingMap
 
 
-class NormedAmplitudeEncoding(FeatureMap):
+class Float32QubitEncoding(EncodingMap):
     def map(self, x):
-        # type: (NormedAmplitudeEncoding, any) -> sparse.dok_matrix
+        # type: (Float32QubitEncoding, List[complex]) -> sparse.dok_matrix
         x_array = np.asarray(x)
-        x_norm = np.linalg.norm(x_array)
-        x_array = x_array / x_norm
-        log.info("Normed Input Vector: %s" % x_array)
-        feature_x = sparse.dok_matrix((x_array.size, 1), dtype=complex)  # type: sparse.dok_matrix
-        for i, e in enumerate(x_array):
-            feature_x[i, 0] = e/x_norm
+        x_norm = np.sqrt(x_array.size)
+        feature_length = x_array.shape[0] * 32
+        feature_x = sparse.dok_matrix((2**feature_length, 1), dtype=complex)  # type: sparse.dok_matrix
+        e = None  # type: np.float64
+        for e in x_array:
+            sbit = bitstring.pack('float:32', e)
+            qubit_state = sbit.bin
+            index_for = int(qubit_state, 2)
+            feature_x[index_for, 0] = 1.0/x_norm
         return feature_x

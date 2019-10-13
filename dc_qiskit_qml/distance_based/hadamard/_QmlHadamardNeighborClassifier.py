@@ -61,7 +61,7 @@ from sklearn.neighbors.base import SupervisedIntegerMixin
 
 from dc_qiskit_qml.QiskitOptions import QiskitOptions
 from .state import QmlStateCircuitBuilder
-from ...feature_maps import FeatureMap
+from ...encoding_maps import EncodingMap
 
 log = logging.getLogger(__name__)
 
@@ -71,13 +71,13 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
     The Hadamard distance & majority based classifier implementing sci-kit learn's mechanism of fit/predict
     """
 
-    def __init__(self, feature_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None,
+    def __init__(self, encoding_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None,
                  basis_gates=None, theta=None, options=None):
-        # type: (FeatureMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float], Optional[QiskitOptions]) -> None
+        # type: (EncodingMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float], Optional[QiskitOptions]) -> None
         """
         Create the classifier
 
-        :param feature_map: a classical feature map to apply to every training and testing sample before building
+        :param encoding_map: a classical feature map to apply to every training and testing sample before building
         the circuit
         :param classifier_circuit_factory: the circuit building factory class
         :param backend: the qiskit backend to do the compilation & computation on
@@ -87,7 +87,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         :param theta: an advanced feature that generalizes the "Hadamard" gate as a rotation with this angle
         :param options: the options for transpilation & executions with qiskit.
         """
-        self.feature_map = feature_map  # type: FeatureMap
+        self.encoding_map = encoding_map  # type: EncodingMap
         self.basis_gates = basis_gates  # type: List[str]
         self.shots = shots  # type: int
         self.backend = backend  # type: BaseBackend
@@ -142,8 +142,8 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             log.info("Creating state for input %d: %s.", index, x)
             circuit_name = 'qml_hadamard_index_%d' % index
 
-            X_input = self.feature_map.map(x)
-            X_train = [self.feature_map.map(s) for s in self._X]
+            X_input = self.encoding_map.map(x)
+            X_train = [self.encoding_map.map(s) for s in self._X]
             qc = self.classifier_state_factory.build_circuit(circuit_name=circuit_name, X_train=X_train,
                                                              y_train=self._y, X_input=X_input)  # type: QuantumCircuit
             ancilla = [q for q in qc.qregs if q.name == 'a'][0]

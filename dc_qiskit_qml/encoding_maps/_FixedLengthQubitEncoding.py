@@ -19,10 +19,10 @@ from typing import List
 import numpy as np
 from scipy import sparse
 
-from . import FeatureMap
+from . import EncodingMap
 
 
-class FixedLengthQubitEncoding(FeatureMap):
+class FixedLengthQubitEncoding(EncodingMap):
     def __init__(self, integer_length, decimal_length):
         self.integer_length = integer_length
         self.decimal_length = decimal_length

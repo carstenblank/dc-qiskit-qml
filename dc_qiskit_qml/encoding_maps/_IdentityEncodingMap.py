@@ -19,12 +19,12 @@ from typing import List
 
 from scipy import sparse
 
-from . import FeatureMap
+from . import EncodingMap
 
 
-class IdentityFeatureMap(FeatureMap):
+class IdentityEncodingMap(EncodingMap):
     def map(self, input_vector):
-        # type: (IdentityFeatureMap, List[complex]) -> sparse.dok_matrix
+        # type: (IdentityEncodingMap, List[complex]) -> sparse.dok_matrix
         result = sparse.dok_matrix((len(input_vector), 1))
         for i, v in enumerate(input_vector):
             result[i, 0] = v

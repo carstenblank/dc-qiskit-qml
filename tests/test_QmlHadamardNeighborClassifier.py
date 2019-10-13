@@ -24,7 +24,7 @@ from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXToffoli
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MöttönenStatePreparation
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import FFQRAMStateVectorRoutine
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import QiskitNativeStatePreparation
-from dc_qiskit_qml.feature_maps import FeatureMap, NormedAmplitudeEncoding
+from dc_qiskit_qml.encoding_maps import EncodingMap, NormedAmplitudeEncoding
 
 logging.basicConfig(format=logging.BASIC_FORMAT, level='INFO')
 log = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class QmlHadamardMöttönenTests(unittest.TestCase):
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
 
-        qml = QmlHadamardNeighborClassifier(feature_map=NormedAmplitudeEncoding(),
+        qml = QmlHadamardNeighborClassifier(encoding_map=NormedAmplitudeEncoding(),
                                             classifier_circuit_factory=classifier_state_factory,
                                             backend=execution_backend, shots=100 * 8192)
         y_predict, y_test = predict(qml)
@@ -107,7 +107,7 @@ class QmlHadamardFFQramTests(unittest.TestCase):
 
         qml = QmlHadamardNeighborClassifier(backend=execution_backend,
                                             classifier_circuit_factory=classifier_state_factory,
-                                            feature_map=NormedAmplitudeEncoding(),
+                                            encoding_map=NormedAmplitudeEncoding(),
                                             shots=100 * 8192)
 
         y_predict, y_test = predict(qml)
@@ -134,7 +134,7 @@ class QmlHadamardQiskitInitializerTests(unittest.TestCase):
 
         qml = QmlHadamardNeighborClassifier(backend=execution_backend,
                                             classifier_circuit_factory=classifier_state_factory,
-                                            feature_map=NormedAmplitudeEncoding(),
+                                            encoding_map=NormedAmplitudeEncoding(),
                                             shots=100 * 8192)
 
         y_predict, y_test = predict(qml)
@@ -160,7 +160,7 @@ class QmlHadamardMultiClassesTests(unittest.TestCase):
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
 
-        qml = QmlHadamardNeighborClassifier(feature_map=NormedAmplitudeEncoding(),
+        qml = QmlHadamardNeighborClassifier(encoding_map=NormedAmplitudeEncoding(),
                                             classifier_circuit_factory=classifier_state_factory,
                                             backend=execution_backend, shots=100 * 8192)
 
@@ -204,7 +204,7 @@ class QmlHadamardCNOTQubitEncodingTests(unittest.TestCase):
         X_test = numpy.asarray([[0.2, 0.4], [0.4, -0.8]])
         y_test = [0, 1]
 
-        class MyFeatureMap(FeatureMap):
+        class MyEncodingMap(EncodingMap):
             def map(self, input_vector: list) -> sparse.dok_matrix:
                 result = sparse.dok_matrix((4, 1))
                 index = 0
@@ -219,13 +219,13 @@ class QmlHadamardCNOTQubitEncodingTests(unittest.TestCase):
                 result[index, 0] = 1.0
                 return result
 
-        feature_map = MyFeatureMap()
+        encoding_map = MyEncodingMap()
 
         initial_state_builder = QmlBinaryDataStateCircuitBuilder(CCXToffoli())
 
         qml = QmlHadamardNeighborClassifier(backend=execution_backend,
                                             shots=100 * 8192,
-                                            feature_map=feature_map,
+                                            encoding_map=encoding_map,
                                             classifier_circuit_factory=initial_state_builder)
 
         qml.fit(X_train, y_train)
@@ -258,7 +258,7 @@ class FullIris(unittest.TestCase):
         qml = QmlHadamardNeighborClassifier(backend=execution_backend,
                                             shots=8192,
                                             classifier_circuit_factory=initial_state_builder,
-                                            feature_map=NormedAmplitudeEncoding())
+                                            encoding_map=NormedAmplitudeEncoding())
 
         qml.fit(X_train, y_train)
         prediction = qml.predict(X_test)

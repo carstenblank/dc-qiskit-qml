@@ -14,12 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-from scipy import sparse
-
-
-class FeatureMap(object):
-    def map(self, input_vector):
-        # type: (FeatureMap, List[complex]) -> sparse.dok_matrix
-        pass
+from ._EncodingMap import EncodingMap
+from ._FixedLengthQubitEncoding import FixedLengthQubitEncoding
+from ._Float32QubitEncoding import Float32QubitEncoding
+from ._IdentityEncodingMap import IdentityEncodingMap
+from ._NormedAmplitudeEncoding import NormedAmplitudeEncoding

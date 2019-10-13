@@ -21,8 +21,8 @@ from scipy import sparse
 
 from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircuitBuilder
 from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXMöttönen, CCXToffoli
-from dc_qiskit_qml.feature_maps import FeatureMap
-from dc_qiskit_qml.feature_maps import FixedLengthQubitEncoding
+from dc_qiskit_qml.encoding_maps import EncodingMap
+from dc_qiskit_qml.encoding_maps import FixedLengthQubitEncoding
 
 logger = logging.getLogger()
 logger.level = logging.DEBUG
@@ -39,7 +39,7 @@ def extract_gate_info(qc, index):
 class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
     def test_one(self):
-        feature_map = FixedLengthQubitEncoding(4, 4)
+        encoding_map = FixedLengthQubitEncoding(4, 4)
 
         X_train = [
             [4.4, -9.53],
@@ -48,20 +48,20 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         y_train = [0, 1]
         input = [2.043, 13.84]
 
-        X_train_in_feature_space = [feature_map.map(x) for x in X_train]
-        X_train_in_feature_space_qubit_notation = [["{:b}".format(i).zfill(2 * 9) for i, _ in elem.keys()] for elem in
-                                                   X_train_in_feature_space]
+        X_train_in_encoded_space = [encoding_map.map(x) for x in X_train]
+        X_train_in_encoded_space_qubit_notation = [["{:b}".format(i).zfill(2 * 9) for i, _ in elem.keys()] for elem in
+                                                   X_train_in_encoded_space]
 
-        input_in_feature_space = feature_map.map(input)
+        input_in_feature_space = encoding_map.map(input)
         input_in_feature_space_qubit_notation = ["{:b}".format(i).zfill(2 * 9) for i, _ in
                                                  input_in_feature_space.keys()]
 
-        logger.info("Training samples in feature space: {}".format(X_train_in_feature_space_qubit_notation))
-        logger.info("Input sample in feature space: {}".format(input_in_feature_space_qubit_notation))
+        logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
+        logger.info("Input sample in encoded space: {}".format(input_in_feature_space_qubit_notation))
 
         circuit = QmlBinaryDataStateCircuitBuilder(CCXMöttönen())
 
-        qc = circuit.build_circuit('test', X_train=X_train_in_feature_space, y_train=y_train, X_input=input_in_feature_space)
+        qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_feature_space)
 
         self.assertIsNotNone(qc)
         self.assertIsNotNone(qc.data)
@@ -101,7 +101,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
     def test_two(self):
 
-        feature_map = FixedLengthQubitEncoding(2, 2)
+        encoding_map = FixedLengthQubitEncoding(2, 2)
 
         X_train = [
             [4.4, -9.53],
@@ -110,18 +110,18 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         y_train = [0, 1]
         input = [2.043, 13.84]
 
-        X_train_in_feature_space = [feature_map.map(x) for x in X_train]
-        X_train_in_feature_space_qubit_notation = [["{:b}".format(i).zfill(2*5) for i, _ in elem.keys()] for elem in X_train_in_feature_space]
+        X_train_in_encoded_space = [encoding_map.map(x) for x in X_train]
+        X_train_in_encoded_space_qubit_notation = [["{:b}".format(i).zfill(2*5) for i, _ in elem.keys()] for elem in X_train_in_encoded_space]
 
-        input_in_feature_space = feature_map.map(input)
+        input_in_feature_space = encoding_map.map(input)
         input_in_feature_space_qubit_notation = ["{:b}".format(i).zfill(2*5) for i, _ in input_in_feature_space.keys()]
 
-        logger.info("Training samples in feature space: {}".format(X_train_in_feature_space_qubit_notation))
-        logger.info("Input sample in feature space: {}".format(input_in_feature_space_qubit_notation))
+        logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
+        logger.info("Input sample in encoded space: {}".format(input_in_feature_space_qubit_notation))
 
         circuit = QmlBinaryDataStateCircuitBuilder(CCXMöttönen())
 
-        qc = circuit.build_circuit('test', X_train=X_train_in_feature_space, y_train=y_train, X_input=input_in_feature_space)
+        qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_feature_space)
 
         self.assertIsNotNone(qc)
         self.assertIsNotNone(qc.data)
@@ -166,7 +166,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         self.assertListEqual(sorted(counts.keys()), sorted(['0 0100111010 0 0', '0 0100001111 0 1', '1 0100100100 1 0', '1 0100001111 1 1']))
 
     def test_three(self):
-        feature_map = FixedLengthQubitEncoding(4, 4)
+        encoding_map = FixedLengthQubitEncoding(4, 4)
 
         X_train = [
             [4.4, -9.53],
@@ -175,20 +175,20 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         y_train = [0, 1]
         input = [2.043, 13.84]
 
-        X_train_in_feature_space = [feature_map.map(x) for x in X_train]
-        X_train_in_feature_space_qubit_notation = [["{:b}".format(i).zfill(2 * 9) for i, _ in elem.keys()] for elem in
-                                                   X_train_in_feature_space]
+        X_train_in_encoded_space = [encoding_map.map(x) for x in X_train]
+        X_train_in_encoded_space_qubit_notation = [["{:b}".format(i).zfill(2 * 9) for i, _ in elem.keys()] for elem in
+                                                   X_train_in_encoded_space]
 
-        input_in_feature_space = feature_map.map(input)
+        input_in_feature_space = encoding_map.map(input)
         input_in_feature_space_qubit_notation = ["{:b}".format(i).zfill(2 * 9) for i, _ in
                                                  input_in_feature_space.keys()]
 
-        logger.info("Training samples in feature space: {}".format(X_train_in_feature_space_qubit_notation))
-        logger.info("Input sample in feature space: {}".format(input_in_feature_space_qubit_notation))
+        logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
+        logger.info("Input sample in encoded space: {}".format(input_in_feature_space_qubit_notation))
 
         circuit = QmlBinaryDataStateCircuitBuilder(CCXToffoli())
 
-        qc = circuit.build_circuit('test', X_train=X_train_in_feature_space, y_train=y_train, X_input=input_in_feature_space)
+        qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_feature_space)
 
         self.assertIsNotNone(qc)
         self.assertIsNotNone(qc.data)
@@ -243,7 +243,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
     def test_four(self):
 
-        feature_map = FixedLengthQubitEncoding(2, 2)
+        encoding_map = FixedLengthQubitEncoding(2, 2)
 
         X_train = [
             [4.4, -9.53],
@@ -252,17 +252,17 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         y_train = [0, 1]
         input = [2.043, 13.84]
 
-        X_train_in_feature_space = [feature_map.map(x) for x in X_train]
-        X_train_in_feature_space_qubit_notation = [["{:b}".format(i).zfill(2*5) for i, _ in elem.keys()] for elem in X_train_in_feature_space]
+        X_train_in_encoded_space = [encoding_map.map(x) for x in X_train]
+        X_train_in_encoded_space_qubit_notation = [["{:b}".format(i).zfill(2*5) for i, _ in elem.keys()] for elem in X_train_in_encoded_space]
 
-        input_in_feature_space = feature_map.map(input)
-        input_in_feature_space_qubit_notation = ["{:b}".format(i).zfill(2*5) for i, _ in input_in_feature_space.keys()]
+        input_in_encoded_space = encoding_map.map(input)
+        input_in_encoded_space_qubit_notation = ["{:b}".format(i).zfill(2*5) for i, _ in input_in_encoded_space.keys()]
 
-        logger.info("Training samples in feature space: {}".format(X_train_in_feature_space_qubit_notation))
-        logger.info("Input sample in feature space: {}".format(input_in_feature_space_qubit_notation))
+        logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
+        logger.info("Input sample in encoded space: {}".format(input_in_encoded_space_qubit_notation))
 
         circuit = QmlBinaryDataStateCircuitBuilder(CCXToffoli())
-        qc = circuit.build_circuit('test', X_train=X_train_in_feature_space, y_train=y_train, X_input=input_in_feature_space)
+        qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_encoded_space)
 
         self.assertIsNotNone(qc)
         self.assertIsNotNone(qc.data)
@@ -328,7 +328,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         X_test = np.asarray([[0.2, 0.4], [0.4, -0.8]])
         y_test = [0, 1]
 
-        class MyFeatureMap(FeatureMap):
+        class MyEncodingMap(EncodingMap):
             def map(self, input_vector: list) -> sparse.dok_matrix:
                 result = sparse.dok_matrix((4, 1))
                 index = 0
@@ -345,10 +345,10 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
         initial_state_builder = QmlBinaryDataStateCircuitBuilder(CCXToffoli())
 
-        feature_map = MyFeatureMap()
-        X_train_in_feature_space = [feature_map.map(s) for s in X_train]
-        X_test_in_feature_space = [feature_map.map(s) for s in X_test]
-        qc = initial_state_builder.build_circuit('test', X_train_in_feature_space, y_train, X_test_in_feature_space[0])
+        encoding_map = MyEncodingMap()
+        X_train_in_encoded_space = [encoding_map.map(s) for s in X_train]
+        X_test_in_encoded_space = [encoding_map.map(s) for s in X_test]
+        qc = initial_state_builder.build_circuit('test', X_train_in_encoded_space, y_train, X_test_in_encoded_space[0])
 
         self.assertIsNotNone(qc)
         self.assertIsNotNone(qc.data)

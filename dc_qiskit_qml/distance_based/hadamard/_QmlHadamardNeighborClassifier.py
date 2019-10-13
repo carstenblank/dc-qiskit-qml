@@ -59,6 +59,7 @@ from qiskit.transpiler import CouplingMap
 from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
 from sklearn.neighbors.base import SupervisedIntegerMixin
 
+from dc_qiskit_qml.QiskitOptions import QiskitOptions
 from .state import QmlStateCircuitBuilder
 from ...feature_maps import FeatureMap
 
@@ -71,9 +72,8 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
     """
 
     def __init__(self, feature_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None,
-                 basis_gates=None,
-                 theta=None):
-        # type: (FeatureMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float]) -> None
+                 basis_gates=None, theta=None, options=None):
+        # type: (FeatureMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float], Optional[QiskitOptions]) -> None
         """
         Create the classifier
 
@@ -81,10 +81,11 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         the circuit
         :param classifier_circuit_factory: the circuit building factory class
         :param backend: the qiskit backend to do the compilation & computation on
-        :param shots: the amount of shots for the experiment
-        :param coupling_map: if given overrides the backend's coupling map, useful when using the simulator
-        :param basis_gates: if given overrides the backend's basis gates, useful for the simulator
+        :param shots: *deprecated* use options. the amount of shots for the experiment
+        :param coupling_map: *deprecated* use options. if given overrides the backend's coupling map, useful when using the simulator
+        :param basis_gates: *deprecated* use options. if given overrides the backend's basis gates, useful for the simulator
         :param theta: an advanced feature that generalizes the "Hadamard" gate as a rotation with this angle
+        :param options: the options for transpilation & executions with qiskit.
         """
         self.feature_map = feature_map  # type: FeatureMap
         self.basis_gates = basis_gates  # type: List[str]
@@ -99,6 +100,15 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         self.last_predict_p_acc = []  # type: List[float]
         self.classifier_state_factory = classifier_circuit_factory  # type: QmlStateCircuitBuilder
         self.theta = np.pi / 2 if theta is None else theta  # type: float
+
+        if options is not None:
+            self.options = options  # type: QiskitOptions
+        else:
+            self.options = QiskitOptions()
+
+        self.options.basis_gates = basis_gates
+        self.options.coupling_map = coupling_map
+        self.options.shots = shots
 
     def transform(self, X, y='deprecated', copy=None):
         return X
@@ -230,11 +240,35 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         log.info("Compiling circuits...")
 
         transpiled_qc = qiskit.transpile(self._last_predict_circuits,
-                                        backend=self.backend,
-                                        coupling_map=self.coupling_map,
-                                        basis_gates=self.basis_gates)  # type: QuantumCircuit
+                                         backend=self.backend,
+                                         coupling_map=self.options.coupling_map,
+                                         basis_gates=self.options.basis_gates,
+                                         backend_properties=self.options.backend_properties,
+                                         initial_layout=self.options.initial_layout,
+                                         seed_transpiler=self.options.seed_transpiler,
+                                         optimization_level=self.options.optimization_level,
+                                         pass_manager=self.options.pass_manager,
+                                         callback=self.options.pass_manager)  # type: QuantumCircuit
 
-        qobj = qiskit.assemble(transpiled_qc, backend=self.backend, shots=self.shots)
+        qobj = qiskit.assemble(transpiled_qc,
+                               backend=self.backend,
+                               shots=self.options.shots,
+                               qobj_id=self.options.qobj_id,
+                               qobj_header=self.options.qobj_header,
+                               memory=self.options.memory,
+                               max_credits=self.options.max_credits,
+                               seed_simulator=self.options.seed_simulator,
+                               default_qubit_los=self.options.default_qubit_los,
+                               default_meas_los=self.options.default_meas_los,
+                               schedule_los=self.options.schedule_los,
+                               meas_level=self.options.meas_level,
+                               meas_return=self.options.meas_return,
+                               memory_slots=self.options.memory_slots,
+                               memory_slot_size=self.options.memory_slot_size,
+                               rep_time=self.options.rep_time,
+                               parameter_binds=self.options.parameter_binds,
+                               **self.options.run_config
+                               )
 
         return qobj
 

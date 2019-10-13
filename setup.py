@@ -34,7 +34,7 @@ info = {
         'dc_qiskit_qml.distance_based.hadamard.state',
         'dc_qiskit_qml.distance_based.hadamard.state.cnot',
         'dc_qiskit_qml.distance_based.hadamard.state.sparsevector',
-        'dc_qiskit_qml.feature_maps'
+        'dc_qiskit_qml.encoding_maps'
     ],
     'description': 'Machine learning (quantum-)algorithms with qiskit as basis',
     'long_description': open('README.rst').read(),

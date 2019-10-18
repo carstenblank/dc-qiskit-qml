@@ -60,7 +60,7 @@ Installation of this library, as well as all dependencies, can be done using pip
 
 .. code-block:: bash
 
-    $ python -m pip install dc_qiskit_aqml
+    $ python -m pip install dc_qiskit_qml
 
 To test that the algorithms are working correctly you can run
 

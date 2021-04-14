@@ -60,6 +60,7 @@ from sklearn.base import ClassifierMixin, TransformerMixin
 
 from dc_qiskit_qml.QiskitOptions import QiskitOptions
 from .state import QmlStateCircuitBuilder
+from .state._measurement_outcome import MeasurementOutcome
 from ...encoding_maps import EncodingMap
 
 log = logging.getLogger(__name__)
@@ -171,6 +172,31 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
 
             self._last_predict_circuits.append(qc)
 
+    @staticmethod
+    def _extract_measurement_answer_from_index(index, result):
+        # type: (int, Result) -> List[MeasurementOutcome]
+        # Aggregate Counts
+        experiment = None  # type: Optional[ExperimentResult]
+        experiment_names = [
+            experiment.header.name
+            for experiment in result.results
+            if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name
+        ]
+        counts = {}  # type: dict
+        for name in experiment_names:
+            c = result.get_counts(name)  # type: dict
+            for k, v in c.items():
+                if k not in counts:
+                    counts[k] = v
+                else:
+                    counts[k] += v
+        log.debug(counts)
+        answer = [
+            MeasurementOutcome(label=int(k.split(' ')[-1], 2), branch=int(k.split(' ')[-2], 2), count=v)
+            for k, v in counts.items()
+        ]
+        return answer
+
     def _read_result(self, test_size, result):
         # type: (QmlHadamardNeighborClassifier, int, Result) -> Optional[List[int]]
         """
@@ -184,36 +210,20 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
         self.last_predict_probability = []
         for index in range(test_size):
 
-            # Aggregate Counts
-            experiment = None  # type: ExperimentResult
-            experiment_names = [experiment.header.name for experiment in result.results
-                                if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name]
-            counts = {}  # type: dict
-            for name in experiment_names:
-                c = result.get_counts(name)  # type: dict
-                for k, v in c.items():
-                    if k not in counts:
-                        counts[k] = v
-                    else:
-                        counts[k] += v
-            log.debug(counts)
-            answer = [
-                {'label': int(k.split(' ')[-1], 2), 'branch': int(k.split(' ')[-2], 2), 'count': v}
-                for k, v in counts.items()
-            ]
+            answer = QmlHadamardNeighborClassifier._extract_measurement_answer_from_index(index, result)
             log.info(answer)
 
-            answer_branch = [e for e in answer if self.classifier_state_factory.is_classifier_branch(e['branch'])]
+            answer_branch = [e for e in answer if self.classifier_state_factory.is_classifier_branch(e.branch)]
             if len(answer_branch) == 0:
                 return None
-            p_acc = sum([e['count'] for e in answer_branch]) / self.shots
 
-            sum_of_all = sum([e['count'] for e in answer_branch])
-            predicted_answer = max(answer_branch, key=lambda e: e['count'])
+            p_acc = sum([e.count for e in answer_branch]) / self.shots
+            sum_of_all = sum([e.count for e in answer_branch])
+            predicted_answer = max(answer_branch, key=lambda e: e.count)
             log.debug(predicted_answer)
 
-            predict_label = predicted_answer['label']
-            probability = predicted_answer['count'] / sum_of_all
+            predict_label = predicted_answer.label
+            probability = predicted_answer.count / sum_of_all
 
             self.last_predict_label.append(predict_label)
             self.last_predict_probability.append(probability)

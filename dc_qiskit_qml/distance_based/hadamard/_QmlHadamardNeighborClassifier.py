@@ -93,6 +93,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         self.backend = backend  # type: BaseBackend
         self.coupling_map = coupling_map  # type: CouplingMap
         self._X = np.asarray([])  # type: np.ndarray
+        self._y = np.asarray([])  # type: np.ndarray
         self.last_predict_X = None
         self.last_predict_label = None
         self.last_predict_probability = []  # type: List[float]
@@ -113,7 +114,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
     def transform(self, X, y='deprecated', copy=None):
         return X
 
-    def _fit(self, X):
+    def fit(self, X, y):
         # type: (QmlHadamardNeighborClassifier, Iterable) -> QmlHadamardNeighborClassifier
         """
         Internal fit method just saves the train sample set
@@ -121,6 +122,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         :param X: array_like, training sample
         """
         self._X = np.asarray(X)
+        self._y = y
         log.debug("Setting training data:")
         for x, y in zip(self._X, self._y):
             log.debug("%s: %s", x, y)

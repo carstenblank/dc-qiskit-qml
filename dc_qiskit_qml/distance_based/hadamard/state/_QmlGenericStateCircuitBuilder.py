@@ -45,7 +45,26 @@ from scipy import sparse
 from ._QmlStateCircuitBuilder import QmlStateCircuitBuilder
 from .sparsevector import QmlSparseVectorStatePreparation
 
-log = logging.getLogger('StateVectorClassifierStateCircuit')
+log = logging.getLogger('QmlGenericStateCircuitBuilder')
+
+
+class RegisterSizes:
+    count_of_samples: int
+    index_of_samples_qubits: int
+    sample_space_dimensions_qubits: int
+    ancilla_qubits: int
+    label_qubits: int
+    total_qubits: int
+
+    def __init__(self, count_of_samples, index_of_samples_qubits, sample_space_dimensions_qubits,
+                 ancilla_qubits, label_qubits, total_qubits):
+        # type: (int, int, int, int, int, int) -> None
+        self.count_of_samples = count_of_samples
+        self.index_of_samples_qubits = index_of_samples_qubits
+        self.sample_space_dimensions_qubits = sample_space_dimensions_qubits
+        self.ancilla_qubits = ancilla_qubits
+        self.label_qubits = label_qubits
+        self.total_qubits = total_qubits
 
 
 class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
@@ -65,8 +84,8 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
         self._last_state_vector = None  # type: sparse.dok_matrix
 
     @staticmethod
-    def get_binary_representation(sample_index, sample_label, entry_index, is_input, index_qb_len, label_qb_len, data_qb_len):
-        # type: (int, int, int, bool, int, int, int) -> str
+    def get_binary_representation(sample_index, sample_label, entry_index, is_input, register_sizes):
+        # type: (int, int, int, bool, RegisterSizes) -> str
         """
         Computes the binary representation of the quantum state as `str` given indices and qubit lengths
 
@@ -74,15 +93,13 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
         :param sample_label: the training data label
         :param entry_index: the data sample vector index
         :param is_input: True if the we encode the input instead of the training vector
-        :param index_qb_len: total qubits needed for the index register
-        :param label_qb_len: total qubits needed for the label register
-        :param data_qb_len: total qubits needed for the data register
+        :param register_sizes: qubits needed for the all registers
         :return: binary representation of which the quantum state being addressed
         """
-        sample_index_b = "{0:b}".format(sample_index).zfill(index_qb_len)
-        sample_label_b = "{0:b}".format(sample_label).zfill(label_qb_len)
+        sample_index_b = "{0:b}".format(sample_index).zfill(register_sizes.index_of_samples_qubits)
+        sample_label_b = "{0:b}".format(sample_label).zfill(register_sizes.label_qubits)
         ancillary_b = '0' if is_input else '1'
-        entry_index_b = "{0:b}".format(entry_index).zfill(data_qb_len)
+        entry_index_b = "{0:b}".format(entry_index).zfill(register_sizes.sample_space_dimensions_qubits)
         # Here we compose the qubit, the ordering will be essential
         # However keep in mind, that the order is LSB
         qubit_composition = [

@@ -148,7 +148,7 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
             X_train = [self.encoding_map.map(s) for s in self._X]
             qc = self.classifier_state_factory.build_circuit(circuit_name=circuit_name, X_train=X_train,
                                                              y_train=self._y, X_input=X_input)  # type: QuantumCircuit
-            ancilla = [q for q in qc.qregs if q.name == 'a'][0]
+            ancillary = [q for q in qc.qregs if q.name == 'a'][0]
             qlabel = [q for q in qc.qregs if q.name == 'l^q'][0]
             clabel = [q for q in qc.cregs if q.name == 'l^c'][0]
             branch = [q for q in qc.cregs if q.name == 'b'][0]
@@ -156,18 +156,18 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
             # Classifier
             # Instead of a Hadamard gate we want this to be parametrized
             # use comments for now to toggle!
-            # standard.h(qc, ancilla)
+            # standard.h(qc, ancillary)
             # Must be minus, as the IBMQX gate is implemented this way!
-            qc.ry(-self.theta, ancilla)
-            qc.z(ancilla)
+            qc.ry(-self.theta, ancillary)
+            qc.z(ancillary)
 
             # Make sure measurements aren't shifted around
             # This would have some consequences as no gates
             # are allowed after a measurement.
             qc.barrier()
 
-            # The correct label is on ancilla branch |0>!
-            measure(qc, ancilla[0], branch[0])
+            # The correct label is on ancillary branch |0>!
+            measure(qc, ancillary[0], branch[0])
             measure(qc, qlabel, clabel)
 
             self._last_predict_circuits.append(qc)

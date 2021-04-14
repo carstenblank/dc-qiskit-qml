@@ -56,8 +56,7 @@ from qiskit.qobj import Qobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
 from qiskit.transpiler import CouplingMap
-from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
-from sklearn.neighbors.base import SupervisedIntegerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin
 
 from dc_qiskit_qml.QiskitOptions import QiskitOptions
 from .state import QmlStateCircuitBuilder
@@ -66,7 +65,7 @@ from ...encoding_maps import EncodingMap
 log = logging.getLogger(__name__)
 
 
-class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, ClassifierMixin, TransformerMixin):
+class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
     """
     The Hadamard distance & majority based classifier implementing sci-kit learn's mechanism of fit/predict
     """

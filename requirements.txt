@@ -1,6 +1,6 @@
-qiskit
-numpy
-scipy
-bitstring
-scikit_learn
-dc_qiskit_algorithms
+bitstring==3.1.7
+dc_qiskit_algorithms==0.0.12
+numpy==1.19.5
+qiskit==0.23.2
+scikit_learn==0.23.0
+scipy==1.6.0

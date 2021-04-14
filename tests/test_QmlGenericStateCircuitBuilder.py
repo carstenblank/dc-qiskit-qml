@@ -42,6 +42,9 @@ class MöttönenStatePreparationTest(unittest.TestCase):
         simulator_state_vector = job.result().get_statevector()
         input_state_vector = initial_state_builder.get_last_state_vector()
 
+        phase = set(numpy.angle(simulator_state_vector)[numpy.abs(simulator_state_vector) > 1e-3]).pop()
+        simulator_state_vector[numpy.abs(simulator_state_vector) < 1e-3] = 0
+        simulator_state_vector = numpy.exp(-1.0j * phase) * simulator_state_vector
         for i, s in zip(input_state_vector.toarray(), simulator_state_vector):
             log.debug("{:.4f} == {:.4f}".format(i[0], s))
-            self.assertAlmostEqual(i[0], s, places=4)
+            self.assertAlmostEqual(i[0], s, places=3)

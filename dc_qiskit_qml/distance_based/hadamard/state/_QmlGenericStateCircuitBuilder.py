@@ -45,7 +45,26 @@ from scipy import sparse
 from ._QmlStateCircuitBuilder import QmlStateCircuitBuilder
 from .sparsevector import QmlSparseVectorStatePreparation
 
-log = logging.getLogger('StateVectorClassifierStateCircuit')
+log = logging.getLogger('QmlGenericStateCircuitBuilder')
+
+
+class RegisterSizes:
+    count_of_samples: int
+    index_of_samples_qubits: int
+    sample_space_dimensions_qubits: int
+    ancilla_qubits: int
+    label_qubits: int
+    total_qubits: int
+
+    def __init__(self, count_of_samples, index_of_samples_qubits, sample_space_dimensions_qubits,
+                 ancilla_qubits, label_qubits, total_qubits):
+        # type: (int, int, int, int, int, int) -> None
+        self.count_of_samples = count_of_samples
+        self.index_of_samples_qubits = index_of_samples_qubits
+        self.sample_space_dimensions_qubits = sample_space_dimensions_qubits
+        self.ancilla_qubits = ancilla_qubits
+        self.label_qubits = label_qubits
+        self.total_qubits = total_qubits
 
 
 class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
@@ -65,8 +84,8 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
         self._last_state_vector = None  # type: sparse.dok_matrix
 
     @staticmethod
-    def get_binary_representation(sample_index, sample_label, entry_index, is_input, index_qb_len, label_qb_len, data_qb_len):
-        # type: (int, int, int, bool, int, int, int) -> str
+    def get_binary_representation(sample_index, sample_label, entry_index, is_input, register_sizes):
+        # type: (int, int, int, bool, RegisterSizes) -> str
         """
         Computes the binary representation of the quantum state as `str` given indices and qubit lengths
 
@@ -74,15 +93,13 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
         :param sample_label: the training data label
         :param entry_index: the data sample vector index
         :param is_input: True if the we encode the input instead of the training vector
-        :param index_qb_len: total qubits needed for the index register
-        :param label_qb_len: total qubits needed for the label register
-        :param data_qb_len: total qubits needed for the data register
+        :param register_sizes: qubits needed for the all registers
         :return: binary representation of which the quantum state being addressed
         """
-        sample_index_b = "{0:b}".format(sample_index).zfill(index_qb_len)
-        sample_label_b = "{0:b}".format(sample_label).zfill(label_qb_len)
+        sample_index_b = "{0:b}".format(sample_index).zfill(register_sizes.index_of_samples_qubits)
+        sample_label_b = "{0:b}".format(sample_label).zfill(register_sizes.label_qubits)
         ancillary_b = '0' if is_input else '1'
-        entry_index_b = "{0:b}".format(entry_index).zfill(data_qb_len)
+        entry_index_b = "{0:b}".format(entry_index).zfill(register_sizes.sample_space_dimensions_qubits)
         # Here we compose the qubit, the ordering will be essential
         # However keep in mind, that the order is LSB
         qubit_composition = [
@@ -92,6 +109,70 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
             ancillary_b
         ]
         return "".join(qubit_composition)
+
+    @staticmethod
+    def _get_register_sizes(X_train, y_train):
+        # type: (List[sparse.dok_matrix], np.ndarray) -> RegisterSizes
+        count_of_samples, sample_space_dimension = len(X_train), X_train[0].get_shape()[0]
+        count_of_distinct_classes = len(set(y_train))
+
+        index_of_samples_qubits_needed = (count_of_samples - 1).bit_length()
+        sample_space_dimensions_qubits_needed = (sample_space_dimension - 1).bit_length()
+        ancilla_qubits_needed = 1
+        label_qubits_needed = (count_of_distinct_classes - 1).bit_length() if count_of_distinct_classes > 1 else 1
+        total_qubits_needed = (index_of_samples_qubits_needed + ancilla_qubits_needed
+                               + sample_space_dimensions_qubits_needed + label_qubits_needed)
+        return RegisterSizes(
+            count_of_samples,
+            index_of_samples_qubits_needed,
+            sample_space_dimensions_qubits_needed,
+            ancilla_qubits_needed,
+            label_qubits_needed,
+            total_qubits_needed
+        )
+
+    @staticmethod
+    def assemble_state_vector(X_train, y_train, X_input):
+        # type: (List[sparse.dok_matrix], any, sparse.dok_matrix) -> sparse.dok_matrix
+        """
+        This method assembles the state vector for given data. The X data for training (which is a list of sparse
+        vectors) is encoded into a sub-space, in the other orthogonal sub-space the same input is encoded everywhere.
+        Also, the label is encoded.
+
+        A note: this method is used in conjunction with a generic state preparation, and this may not be the most
+        efficient way.
+
+        :param X_train: The training data set
+        :param y_train: the training class label data set
+        :param X_input: the unclassified input data vector
+        :return: The
+        """
+        register_sizes = QmlGenericStateCircuitBuilder._get_register_sizes(X_train, y_train)
+
+        state_vector = sparse.dok_matrix((2 ** register_sizes.total_qubits, 1), dtype=complex)  # type: sparse.dok_matrix
+
+        factor = 2 * register_sizes.count_of_samples * 1.0
+
+        for index_sample, (sample, label) in enumerate(zip(X_train, y_train)):
+            for (i, j), sample_i in sample.items():
+                qubit_state = QmlGenericStateCircuitBuilder.get_binary_representation(
+                    index_sample, label, i, is_input=False, register_sizes=register_sizes
+                )
+                state_index = int(qubit_state, 2)
+                log.debug("Sample Entry: %s (%d): %.2f.", qubit_state, state_index, sample_i)
+                state_vector[state_index, 0] = sample_i
+
+            for (i, j), input_i in X_input.items():
+                qubit_state = QmlGenericStateCircuitBuilder.get_binary_representation(
+                    index_sample, label, i, is_input=True, register_sizes=register_sizes
+                )
+                state_index = int(qubit_state, 2)
+                log.debug("Input Entry: %s (%d): %.2f.", qubit_state, state_index, input_i)
+                state_vector[state_index, 0] = input_i
+
+        state_vector = state_vector * (1 / np.sqrt(factor))
+
+        return state_vector
 
     def build_circuit(self, circuit_name, X_train, y_train, X_input):
         # type: (QmlGenericStateCircuitBuilder, str, List[sparse.dok_matrix], any, sparse.dok_matrix) -> QuantumCircuit
@@ -115,58 +196,22 @@ class QmlGenericStateCircuitBuilder(QmlStateCircuitBuilder):
         log.debug("Preparing state.")
         log.debug("Raw Input Vector: %s" % X_input)
 
-        count_of_samples, sample_space_dimension = len(X_train), X_train[0].get_shape()[0]
-        count_of_distinct_classes = len(set(y_train))
+        register_sizes = QmlGenericStateCircuitBuilder._get_register_sizes(X_train, y_train)
+        log.info("Qubit map: index=%d, ancillary=%d, feature=%d, label=%d", register_sizes.index_of_samples_qubits,
+                 register_sizes.ancilla_qubits, register_sizes.sample_space_dimensions_qubits,
+                 register_sizes.label_qubits)
 
-        index_of_samples_qubits_needed = (count_of_samples - 1).bit_length()
-        sample_space_dimensions_qubits_needed = (sample_space_dimension - 1).bit_length()
-        ancilla_qubits_needed = 1
-        label_qubits_needed = (count_of_distinct_classes - 1).bit_length() if count_of_distinct_classes > 1 else 1
-        total_qubits_needed = index_of_samples_qubits_needed + ancilla_qubits_needed \
-                              + sample_space_dimensions_qubits_needed + label_qubits_needed
-
-        log.info("Qubit map: index=%d, ancillary=%d, feature=%d, label=%d", index_of_samples_qubits_needed,
-                 ancilla_qubits_needed, sample_space_dimensions_qubits_needed, label_qubits_needed)
-
-        state_vector = sparse.dok_matrix((2 ** total_qubits_needed, 1), dtype=complex)  # type: sparse.dok_matrix
-
-        factor = 2 * count_of_samples * 1.0
-
-        for index_sample, (sample, label) in enumerate(zip(X_train, y_train)):
-            for (i, j), sample_i in sample.items():
-                qubit_state = QmlGenericStateCircuitBuilder.get_binary_representation(index_sample, label, i,
-                                                                                      is_input=False,
-                                                                                      index_qb_len=index_of_samples_qubits_needed,
-                                                                                      label_qb_len=label_qubits_needed,
-                                                                                      data_qb_len=sample_space_dimensions_qubits_needed)
-                state_index = int(qubit_state, 2)
-                log.debug("Sample Entry: %s (%d): %.2f.", qubit_state, state_index, sample_i)
-                state_vector[state_index, 0] = sample_i
-
-            for (i, j), input_i in X_input.items():
-                qubit_state = QmlGenericStateCircuitBuilder.get_binary_representation(index_sample, label, i, is_input=True,
-                                                                                      index_qb_len=index_of_samples_qubits_needed,
-                                                                                      label_qb_len=label_qubits_needed,
-                                                                                      data_qb_len=sample_space_dimensions_qubits_needed
-                                                                                      )
-                state_index = int(qubit_state, 2)
-                log.debug("Input Entry: %s (%d): %.2f.", qubit_state, state_index, input_i)
-                state_vector[state_index, 0] = input_i
-
-        state_vector = state_vector * (1 / np.sqrt(factor))
-
-        ancilla = QuantumRegister(ancilla_qubits_needed, "a")
-        index = QuantumRegister(index_of_samples_qubits_needed, "i")
-        data = QuantumRegister(sample_space_dimensions_qubits_needed, "f^S")
-        qlabel = QuantumRegister(label_qubits_needed, "l^q")
-        clabel = ClassicalRegister(label_qubits_needed, "l^c")
+        ancilla = QuantumRegister(register_sizes.ancilla_qubits, "a")
+        index = QuantumRegister(register_sizes.index_of_samples_qubits, "i")
+        data = QuantumRegister(register_sizes.sample_space_dimensions_qubits, "f^S")
+        qlabel = QuantumRegister(register_sizes.label_qubits, "l^q")
+        clabel = ClassicalRegister(register_sizes.label_qubits, "l^c")
         branch = ClassicalRegister(1, "b")
 
         qc = QuantumCircuit(ancilla, index, data, qlabel, clabel, branch, name=circuit_name)  # type: QuantumCircuit
 
-        self._last_state_vector = state_vector
-
-        return self.state_preparation.prepare_state(qc, state_vector)
+        self._last_state_vector = QmlGenericStateCircuitBuilder.assemble_state_vector(X_train, y_train, X_input)
+        return self.state_preparation.prepare_state(qc, self._last_state_vector)
 
     def is_classifier_branch(self, branch_value):
         # type: (QmlGenericStateCircuitBuilder, int) -> bool

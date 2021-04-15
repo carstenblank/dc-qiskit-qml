@@ -40,7 +40,6 @@ from typing import List
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.dagcircuit import DAGNode
-from qiskit.extensions.standard.h import h
 from scipy import sparse
 
 from . import QmlStateCircuitBuilder
@@ -121,8 +120,8 @@ class QmlBinaryDataStateCircuitBuilder(QmlStateCircuitBuilder):
         # ======================
 
         # Superposition on ancilla & index
-        h(qc, ancilla)
-        h(qc, index)
+        qc.h(ancilla)
+        qc.h(index)
 
         # Create multi-CNOTs
         # First on the sample, then the input and finally the label

@@ -56,17 +56,17 @@ from qiskit.qobj import Qobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
 from qiskit.transpiler import CouplingMap
-from sklearn.base import ClassifierMixin, TransformerMixin, BaseEstimator
-from sklearn.neighbors.base import SupervisedIntegerMixin
+from sklearn.base import ClassifierMixin, TransformerMixin
 
 from dc_qiskit_qml.QiskitOptions import QiskitOptions
 from .state import QmlStateCircuitBuilder
+from .state._measurement_outcome import MeasurementOutcome
 from ...encoding_maps import EncodingMap
 
 log = logging.getLogger(__name__)
 
 
-class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, ClassifierMixin, TransformerMixin):
+class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
     """
     The Hadamard distance & majority based classifier implementing sci-kit learn's mechanism of fit/predict
     """
@@ -93,6 +93,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         self.backend = backend  # type: BaseBackend
         self.coupling_map = coupling_map  # type: CouplingMap
         self._X = np.asarray([])  # type: np.ndarray
+        self._y = np.asarray([])  # type: np.ndarray
         self.last_predict_X = None
         self.last_predict_label = None
         self.last_predict_probability = []  # type: List[float]
@@ -113,7 +114,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
     def transform(self, X, y='deprecated', copy=None):
         return X
 
-    def _fit(self, X):
+    def fit(self, X, y):
         # type: (QmlHadamardNeighborClassifier, Iterable) -> QmlHadamardNeighborClassifier
         """
         Internal fit method just saves the train sample set
@@ -121,6 +122,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         :param X: array_like, training sample
         """
         self._X = np.asarray(X)
+        self._y = y
         log.debug("Setting training data:")
         for x, y in zip(self._X, self._y):
             log.debug("%s: %s", x, y)
@@ -146,7 +148,7 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             X_train = [self.encoding_map.map(s) for s in self._X]
             qc = self.classifier_state_factory.build_circuit(circuit_name=circuit_name, X_train=X_train,
                                                              y_train=self._y, X_input=X_input)  # type: QuantumCircuit
-            ancilla = [q for q in qc.qregs if q.name == 'a'][0]
+            ancillary = [q for q in qc.qregs if q.name == 'a'][0]
             qlabel = [q for q in qc.qregs if q.name == 'l^q'][0]
             clabel = [q for q in qc.cregs if q.name == 'l^c'][0]
             branch = [q for q in qc.cregs if q.name == 'b'][0]
@@ -154,21 +156,46 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
             # Classifier
             # Instead of a Hadamard gate we want this to be parametrized
             # use comments for now to toggle!
-            # standard.h(qc, ancilla)
+            # standard.h(qc, ancillary)
             # Must be minus, as the IBMQX gate is implemented this way!
-            qc.ry(-self.theta, ancilla)
-            qc.z(ancilla)
+            qc.ry(-self.theta, ancillary)
+            qc.z(ancillary)
 
             # Make sure measurements aren't shifted around
             # This would have some consequences as no gates
             # are allowed after a measurement.
             qc.barrier()
 
-            # The correct label is on ancilla branch |0>!
-            measure(qc, ancilla[0], branch[0])
+            # The correct label is on ancillary branch |0>!
+            measure(qc, ancillary[0], branch[0])
             measure(qc, qlabel, clabel)
 
             self._last_predict_circuits.append(qc)
+
+    @staticmethod
+    def _extract_measurement_answer_from_index(index, result):
+        # type: (int, Result) -> List[MeasurementOutcome]
+        # Aggregate Counts
+        experiment = None  # type: Optional[ExperimentResult]
+        experiment_names = [
+            experiment.header.name
+            for experiment in result.results
+            if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name
+        ]
+        counts = {}  # type: dict
+        for name in experiment_names:
+            c = result.get_counts(name)  # type: dict
+            for k, v in c.items():
+                if k not in counts:
+                    counts[k] = v
+                else:
+                    counts[k] += v
+        log.debug(counts)
+        answer = [
+            MeasurementOutcome(label=int(k.split(' ')[-1], 2), branch=int(k.split(' ')[-2], 2), count=v)
+            for k, v in counts.items()
+        ]
+        return answer
 
     def _read_result(self, test_size, result):
         # type: (QmlHadamardNeighborClassifier, int, Result) -> Optional[List[int]]
@@ -183,36 +210,20 @@ class QmlHadamardNeighborClassifier(BaseEstimator, SupervisedIntegerMixin, Class
         self.last_predict_probability = []
         for index in range(test_size):
 
-            # Aggregate Counts
-            experiment = None  # type: ExperimentResult
-            experiment_names = [experiment.header.name for experiment in result.results
-                                if experiment.header and 'qml_hadamard_index_%d' % index in experiment.header.name]
-            counts = {}  # type: dict
-            for name in experiment_names:
-                c = result.get_counts(name)  # type: dict
-                for k, v in c.items():
-                    if k not in counts:
-                        counts[k] = v
-                    else:
-                        counts[k] += v
-            log.debug(counts)
-            answer = [
-                {'label': int(k.split(' ')[-1], 2), 'branch': int(k.split(' ')[-2], 2), 'count': v}
-                for k, v in counts.items()
-            ]
+            answer = QmlHadamardNeighborClassifier._extract_measurement_answer_from_index(index, result)
             log.info(answer)
 
-            answer_branch = [e for e in answer if self.classifier_state_factory.is_classifier_branch(e['branch'])]
+            answer_branch = [e for e in answer if self.classifier_state_factory.is_classifier_branch(e.branch)]
             if len(answer_branch) == 0:
                 return None
-            p_acc = sum([e['count'] for e in answer_branch]) / self.shots
 
-            sum_of_all = sum([e['count'] for e in answer_branch])
-            predicted_answer = max(answer_branch, key=lambda e: e['count'])
+            p_acc = sum([e.count for e in answer_branch]) / self.shots
+            sum_of_all = sum([e.count for e in answer_branch])
+            predicted_answer = max(answer_branch, key=lambda e: e.count)
             log.debug(predicted_answer)
 
-            predict_label = predicted_answer['label']
-            probability = predicted_answer['count'] / sum_of_all
+            predict_label = predicted_answer.label
+            probability = predicted_answer.count / sum_of_all
 
             self.last_predict_label.append(predict_label)
             self.last_predict_probability.append(probability)

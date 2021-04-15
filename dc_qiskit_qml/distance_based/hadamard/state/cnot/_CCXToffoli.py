@@ -43,10 +43,6 @@ from typing import List, Union, Tuple
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.register import Register
-from qiskit.extensions.standard.barrier import barrier
-from qiskit.extensions.standard.ccx import ccx
-from qiskit.extensions.standard.cx import cx
-from qiskit.extensions.standard.x import x
 
 from . import CCXFactory
 
@@ -77,13 +73,13 @@ class CCXToffoli(CCXFactory):
         bit_string = "{:b}".format(conditial_case).zfill(len(control_qubits))
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':
-                x(qc, control_qubits[i])
-        barrier(qc)
+                qc.x(control_qubits[i])
+        qc.barrier()
 
         if len(control_qubits) == 1: # This is just the normal CNOT
-            cx(qc, control_qubits[0], tgt)
+            qc.cx(control_qubits[0], tgt)
         elif len(control_qubits) == 2: # This is the simple Toffoli
-            ccx(qc, control_qubits[0], control_qubits[1], tgt)
+            qc.ccx(control_qubits[0], control_qubits[1], tgt)
         else:
             # Create ancilla qubit or take the one that is already there
             if 'ccx_ancilla' not in [q.name for q in qc.qregs]:
@@ -93,20 +89,20 @@ class CCXToffoli(CCXFactory):
                 ccx_ancilla = [q for q in qc.qregs if q.name == 'ccx_ancilla'][0]  # type: QuantumRegister
 
             # Algorithm
-            ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])
+            qc.ccx(control_qubits[0], control_qubits[1], ccx_ancilla[0])
             for i in range(1, ccx_ancilla.size):
-                ccx(qc, control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
+                qc.ccx(control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
 
-            ccx(qc, control_qubits[-1], ccx_ancilla[ccx_ancilla.size - 1], tgt)
+            qc.ccx(control_qubits[-1], ccx_ancilla[ccx_ancilla.size - 1], tgt)
 
             for i in reversed(range(1, ccx_ancilla.size)):
-                ccx(qc, control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
-            ccx(qc, control_qubits[0], control_qubits[1], ccx_ancilla[0])
+                qc.ccx(control_qubits[i], ccx_ancilla[i - 1], ccx_ancilla[i])
+            qc.ccx(control_qubits[0], control_qubits[1], ccx_ancilla[0])
 
-        barrier(qc)
+        qc.barrier()
         # Undo the conditional case
         for i, b in enumerate(reversed(bit_string)):
             if b == '0':
-                x(qc, control_qubits[i])
+                qc.x(control_qubits[i])
 
         return qc

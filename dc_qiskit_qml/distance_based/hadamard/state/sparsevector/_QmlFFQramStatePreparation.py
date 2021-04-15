@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import List
 
 import numpy as np
 # Copyright 2018 Carsten Blank
@@ -14,7 +15,7 @@ import numpy as np
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from qiskit import QuantumCircuit, QuantumRegister
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit.measure import measure
 from scipy import sparse
 
@@ -25,14 +26,14 @@ from ._QmlSparseVectorStatePreparation import QmlSparseVectorStatePreparation
 class FFQRAMStateVectorRoutine(QmlSparseVectorStatePreparation):
     def prepare_state(self, qc, state_vector):
         # type: (FFQRAMStateVectorRoutine, QuantumCircuit, sparse.dok_matrix) -> QuantumCircuit
-        bus = [reg[i] for reg in qc.qregs for i in range(reg.size)]
-        ffqram_reg = QuantumRegister(1, "ffqram_reg")
-        qc.add_register(ffqram_reg)
 
-        # FIXME (one day) hack the branch register from 1 bit to 2 bits
-        branch = [reg for reg in qc.cregs if reg.name == "b"][0]
-        branch.size = 2
-        branch._bits = [branch.bit_type(branch, idx) for idx in range(branch.size)]
+        cregs_new = [reg for reg in qc.cregs if reg.name != "b"]  # type: List[ClassicalRegister]
+        branch_old = [reg for reg in qc.cregs if reg.name == "b"][0]  # type: ClassicalRegister
+        branch = ClassicalRegister(name=branch_old.name, size=2)
+        ffqram_reg = QuantumRegister(1, "ffqram_reg")
+
+        qc_result = QuantumCircuit(*qc.qregs, ffqram_reg, *cregs_new, branch, name=qc.name)
+        bus = [reg[i] for reg in qc.qregs for i in range(reg.size)]
 
         # Create DB
         db = FFQramDb()
@@ -41,13 +42,13 @@ class FFQRAMStateVectorRoutine(QmlSparseVectorStatePreparation):
 
         # State Prep
         for r in bus:
-            qc.h(r)
-        db.add_to_circuit(qc, bus, ffqram_reg[0])
+            qc_result.h(r)
+        db.add_to_circuit(qc_result, bus, ffqram_reg[0])
 
-        qc.barrier()
-        measure(qc, ffqram_reg[0], branch[1])
+        qc_result.barrier()
+        measure(qc_result, ffqram_reg[0], branch[1])
 
-        return qc
+        return qc_result
 
     def is_classifier_branch(self, branch_value):
         return branch_value == 2

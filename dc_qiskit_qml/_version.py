@@ -15,5 +15,6 @@
 """Version information.
    Version number (major.minor.patch[-label])
 """
+import importlib.metadata
 
-__version__ = '0.0.3'
+__version__ = importlib.metadata.version("dc_qiskit_qml")

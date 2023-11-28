@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "dc-qiskit-qml"
+version = "0.0.3"
+description = ""
+authors = [
+    "Carsten Blank <blank@data-cybernetics.com>",
+    "Sebastian Boerakker <boerakker@data-cybernetics.com>"
+]
+readme = "README.rst"
+packages = [
+    {include = "dc_qiskit_qml"}
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4"
+bitstring = "*"
+qclib = "*"
+
+#[tool.poetry.extras]
+#databases = ["psycopg2-binary", "sqlalchemy"]
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "*"
+matplotlib = "*"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

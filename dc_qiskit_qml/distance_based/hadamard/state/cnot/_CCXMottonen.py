@@ -37,7 +37,7 @@ CCXMöttönen
 import logging
 from typing import List, Union, Tuple
 
-from dc_qiskit_algorithms.UniformRotation import ccx_uni_rot
+from qclib.gates.mcx import LinearMcx
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.register import Register
 
@@ -46,7 +46,7 @@ from . import CCXFactory
 log = logging.getLogger(__name__)
 
 
-class CCXMöttönen(CCXFactory):
+class CCXMottonen(CCXFactory):
     """
     cc-X gate implemented via the uniform rotation scheme (Möttönen et al. 2005)
     """
@@ -62,5 +62,5 @@ class CCXMöttönen(CCXFactory):
         :param tgt: the target to be applied the controlled X gate on
         :return: the circuit after application of the gate
         """
-        ccx_uni_rot(qc, conditial_case, control_qubits, tgt)
+        LinearMcx.mcx(qc, ctrl_state=conditial_case, controls=control_qubits, target=tgt)
         return qc

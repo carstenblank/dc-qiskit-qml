@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ._MöttönenStatePreparation import MöttönenStatePreparation
+from ._MottonenStatePreparation import MottonenStatePreparation
 from ._QmlFFQramStatePreparation import FFQRAMStateVectorRoutine
 from ._QiskitNativeStatePreparation import QiskitNativeStatePreparation
 from ._QmlSparseVectorStatePreparation import QmlSparseVectorStatePreparation

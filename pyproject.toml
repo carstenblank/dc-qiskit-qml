@@ -15,9 +15,8 @@ packages = [
 python = ">=3.9,<4"
 bitstring = "*"
 qclib = "*"
-
-#[tool.poetry.extras]
-#databases = ["psycopg2-binary", "sqlalchemy"]
+qiskit-aer = "*"
+dc-qiskit-algorithms = { git = "https://github.com/carstenblank/dc-qiskit-algorithms.git", branch = "feature/update_version"}
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "*"

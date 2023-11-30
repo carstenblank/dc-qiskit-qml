@@ -172,15 +172,16 @@ class CompactHadamardClassifier(ClassifierMixin, TransformerMixin):
 
         log.info("Compiling circuits...")
 
-        transpiled_qc = qiskit.transpile(self._last_predict_circuits,
-                                         backend=self.backend,
-                                         coupling_map=self.options.coupling_map,
-                                         basis_gates=self.options.basis_gates,
-                                         backend_properties=self.options.backend_properties,
-                                         initial_layout=self.options.initial_layout,
-                                         seed_transpiler=self.options.seed_transpiler,
-                                         optimization_level=self.options.optimization_level,
-                                         callback=self.options.pass_manager)  # type: List[QuantumCircuit]
+        transpiled_qc = qiskit.transpile(
+            self._last_predict_circuits,
+            backend=self.backend,
+            coupling_map=self.options.coupling_map,
+            basis_gates=self.options.basis_gates,
+            backend_properties=self.options.backend_properties,
+            initial_layout=self.options.initial_layout,
+            seed_transpiler=self.options.seed_transpiler,
+            optimization_level=self.options.optimization_level
+        )  # type: List[QuantumCircuit]
 
         qobj = qiskit.assemble(transpiled_qc,
                                backend=self.backend,

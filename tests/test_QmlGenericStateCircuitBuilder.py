@@ -21,7 +21,7 @@ class MottonenStatePreparationTest(unittest.TestCase):
     def runTest(self):
         from sklearn.datasets import load_iris
 
-        X, y = load_iris(True)
+        X, y = load_iris(return_X_y=True)
         X = numpy.asarray([x[0:2] for x, yy in zip(X, y) if yy != 2])
         y = numpy.asarray([yy for x, yy in zip(X, y) if yy != 2])
 
@@ -39,7 +39,7 @@ class MottonenStatePreparationTest(unittest.TestCase):
                                                  encoding_map.map(X_test[0]))
         statevector_backend = qiskit.Aer.get_backend('statevector_simulator')  # type: BackendV2
         job = qiskit.execute(qc, statevector_backend, shots=1)  # type: JobV1
-        simulator_state_vector = job.result().get_statevector()
+        simulator_state_vector = numpy.asarray(job.result().get_statevector())
         input_state_vector = initial_state_builder.get_last_state_vector()
 
         phase = set(numpy.angle(simulator_state_vector)[numpy.abs(simulator_state_vector) > 1e-3]).pop()

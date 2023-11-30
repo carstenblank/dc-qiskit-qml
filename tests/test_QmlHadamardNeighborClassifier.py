@@ -34,7 +34,7 @@ def get_data(only_two_features=True):
     from sklearn.preprocessing import StandardScaler, Normalizer
     from sklearn.datasets import load_iris
 
-    X, y = load_iris(True)
+    X, y = load_iris(return_X_y=True)
 
     X = [x[0:2] if only_two_features else x for x, y in zip(X, y) if y != 2]
     y = [y for x, y in zip(X, y) if y != 2]
@@ -169,7 +169,7 @@ class QmlHadamardMultiClassesTests(unittest.TestCase):
         from sklearn.preprocessing import StandardScaler, Normalizer
         from sklearn.pipeline import Pipeline
 
-        X, y = load_wine(True)
+        X, y = load_wine(return_X_y=True)
 
         preprocessing_pipeline = Pipeline([
             ('scaler', StandardScaler()),
@@ -241,7 +241,7 @@ class FullIris(unittest.TestCase):
     def runTest(self):
         from sklearn.datasets import load_iris
 
-        X, y = load_iris(True)
+        X, y = load_iris(return_X_y=True)
         X = numpy.asarray([x[0:2] for x, yy in zip(X, y) if yy != 2])
         y = numpy.asarray([yy for x, yy in zip(X, y) if yy != 2])
 

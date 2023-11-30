@@ -11,7 +11,6 @@ import unittest
 
 import numpy
 import qiskit
-from qiskit.providers import BaseBackend
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, Normalizer
@@ -28,7 +27,7 @@ class FullIris(unittest.TestCase):
     def test(self):
         from sklearn.datasets import load_iris
 
-        X, y = load_iris(True)
+        X, y = load_iris(return_X_y=True)
         X = numpy.asarray([x for x, yy in zip(X, y) if yy != 2])
         y = numpy.asarray([yy for x, yy in zip(X, y) if yy != 2])
 

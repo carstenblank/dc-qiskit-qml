@@ -32,7 +32,7 @@ MöttönenStatePreparation
     :members:
 
 """
-from qclib.state_preparation.ucg import UCGInitialize
+from dc_qiskit_algorithms.MottonenStatePreparation import state_prep_möttönen
 from qiskit import QuantumCircuit
 from scipy import sparse
 
@@ -55,7 +55,7 @@ class MottonenStatePreparation(QmlSparseVectorStatePreparation):
 
         # State Prep
         register = [reg[i] for reg in qregs for i in range(0, reg.size)]
-        UCGInitialize.initialize(qc, state_vector, register)
+        state_prep_möttönen(qc, state_vector, register)
 
         return qc
 

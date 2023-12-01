@@ -21,6 +21,8 @@ dc-qiskit-algorithms = { git = "https://github.com/carstenblank/dc-qiskit-algori
 [tool.poetry.group.dev.dependencies]
 jupyter = "*"
 matplotlib = "*"
+pylatexenc = "*"
+qiskit-ibm-provider = "*"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"

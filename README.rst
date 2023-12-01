@@ -90,7 +90,7 @@ You can check out the classifier as follows
     from dc_qiskit_qml.feature_maps import NormedAmplitudeEncoding
     from dc_qiskit_qml.distance_based.hadamard import QmlHadamardNeighborClassifier
     from dc_qiskit_qml.distance_based.hadamard.state import QmlGenericStateCircuitBuilder
-    from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MöttönenStatePreparation
+    from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MottonenStatePreparation
 
     X, y = load_iris(True)
     # Only the first two features and only get two labels
@@ -108,7 +108,7 @@ You can check out the classifier as follows
 
     # Using the generic wave function (state vector) routine using the 'Möttönen'
     # state preparation algorithm
-    initial_state_builder = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
+    initial_state_builder = QmlGenericStateCircuitBuilder(MottonenStatePreparation())
 
     # The normed amplitude encoding ensures that the data is normalized
     # This is a somewhat unnecessary step as above we do that already

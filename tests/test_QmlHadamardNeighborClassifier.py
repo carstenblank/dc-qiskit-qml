@@ -11,7 +11,7 @@ import unittest
 
 import numpy
 import qiskit
-from qiskit.providers import BaseBackend
+from qiskit.providers import BackendV2
 from scipy import sparse
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -21,7 +21,7 @@ from dc_qiskit_qml.distance_based.hadamard import QmlHadamardNeighborClassifier
 from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircuitBuilder
 from dc_qiskit_qml.distance_based.hadamard.state import QmlGenericStateCircuitBuilder
 from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXToffoli
-from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MöttönenStatePreparation
+from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import MottonenStatePreparation
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import FFQRAMStateVectorRoutine
 from dc_qiskit_qml.distance_based.hadamard.state.sparsevector import QiskitNativeStatePreparation
 from dc_qiskit_qml.encoding_maps import EncodingMap, NormedAmplitudeEncoding
@@ -34,7 +34,7 @@ def get_data(only_two_features=True):
     from sklearn.preprocessing import StandardScaler, Normalizer
     from sklearn.datasets import load_iris
 
-    X, y = load_iris(True)
+    X, y = load_iris(return_X_y=True)
 
     X = [x[0:2] if only_two_features else x for x, y in zip(X, y) if y != 2]
     y = [y for x, y in zip(X, y) if y != 2]
@@ -76,9 +76,9 @@ class QmlHadamardMöttönenTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with Möttönen Preparation.")
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
 
-        classifier_state_factory = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
+        classifier_state_factory = QmlGenericStateCircuitBuilder(MottonenStatePreparation())
 
         qml = QmlHadamardNeighborClassifier(encoding_map=NormedAmplitudeEncoding(),
                                             classifier_circuit_factory=classifier_state_factory,
@@ -101,7 +101,7 @@ class QmlHadamardFFQramTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(FFQRAMStateVectorRoutine())
 
@@ -128,7 +128,7 @@ class QmlHadamardQiskitInitializerTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with FF Qram Preparation.")
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
 
         classifier_state_factory = QmlGenericStateCircuitBuilder(QiskitNativeStatePreparation())
 
@@ -156,9 +156,9 @@ class QmlHadamardMultiClassesTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with Möttönen Preparation.")
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
 
-        classifier_state_factory = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
+        classifier_state_factory = QmlGenericStateCircuitBuilder(MottonenStatePreparation())
 
         qml = QmlHadamardNeighborClassifier(encoding_map=NormedAmplitudeEncoding(),
                                             classifier_circuit_factory=classifier_state_factory,
@@ -169,7 +169,7 @@ class QmlHadamardMultiClassesTests(unittest.TestCase):
         from sklearn.preprocessing import StandardScaler, Normalizer
         from sklearn.pipeline import Pipeline
 
-        X, y = load_wine(True)
+        X, y = load_wine(return_X_y=True)
 
         preprocessing_pipeline = Pipeline([
             ('scaler', StandardScaler()),
@@ -196,7 +196,7 @@ class QmlHadamardCNOTQubitEncodingTests(unittest.TestCase):
 
     def runTest(self):
         log.info("Testing 'QmlHadamardNeighborClassifier' with CNOT Preparation.")
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
 
         X_train = numpy.asarray([[1.0, 1.0], [-1.0, 1.0], [-1.0, -1.0], [1.0, -1.0]])
         y_train = [0, 1, 0, 1]
@@ -241,7 +241,7 @@ class FullIris(unittest.TestCase):
     def runTest(self):
         from sklearn.datasets import load_iris
 
-        X, y = load_iris(True)
+        X, y = load_iris(return_X_y=True)
         X = numpy.asarray([x[0:2] for x, yy in zip(X, y) if yy != 2])
         y = numpy.asarray([yy for x, yy in zip(X, y) if yy != 2])
 
@@ -252,9 +252,9 @@ class FullIris(unittest.TestCase):
         X = preprocessing_pipeline.fit_transform(X, y)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
 
-        initial_state_builder = QmlGenericStateCircuitBuilder(MöttönenStatePreparation())
+        initial_state_builder = QmlGenericStateCircuitBuilder(MottonenStatePreparation())
 
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
         qml = QmlHadamardNeighborClassifier(backend=execution_backend,
                                             shots=8192,
                                             classifier_circuit_factory=initial_state_builder,

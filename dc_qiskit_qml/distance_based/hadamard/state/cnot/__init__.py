@@ -15,5 +15,5 @@
 # limitations under the License.
 
 from ._CCXFactory import CCXFactory
-from ._CCXMöttönen import CCXMöttönen
+from ._CCXMottonen import CCXMottonen
 from ._CCXToffoli import CCXToffoli

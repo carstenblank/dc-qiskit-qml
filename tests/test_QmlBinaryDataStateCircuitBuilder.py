@@ -14,13 +14,11 @@ from typing import Dict
 import numpy as np
 import qiskit
 from qiskit import QuantumCircuit, ClassicalRegister
-from qiskit.circuit.measure import measure
-from qiskit.providers import BaseBackend, BaseJob
-from qiskit.providers.aer import AerJob
+from qiskit.providers import BackendV2
 from scipy import sparse
 
 from dc_qiskit_qml.distance_based.hadamard.state import QmlBinaryDataStateCircuitBuilder
-from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXMöttönen, CCXToffoli
+from dc_qiskit_qml.distance_based.hadamard.state.cnot import CCXMottonen, CCXToffoli
 from dc_qiskit_qml.encoding_maps import EncodingMap
 from dc_qiskit_qml.encoding_maps import FixedLengthQubitEncoding
 
@@ -59,7 +57,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
         logger.info("Input sample in encoded space: {}".format(input_in_feature_space_qubit_notation))
 
-        circuit = QmlBinaryDataStateCircuitBuilder(CCXMöttönen())
+        circuit = QmlBinaryDataStateCircuitBuilder(CCXMottonen())
 
         qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_feature_space)
 
@@ -119,7 +117,7 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
         logger.info("Training samples in encoded space: {}".format(X_train_in_encoded_space_qubit_notation))
         logger.info("Input sample in encoded space: {}".format(input_in_feature_space_qubit_notation))
 
-        circuit = QmlBinaryDataStateCircuitBuilder(CCXMöttönen())
+        circuit = QmlBinaryDataStateCircuitBuilder(CCXMottonen())
 
         qc = circuit.build_circuit('test', X_train=X_train_in_encoded_space, y_train=y_train, X_input=input_in_feature_space)
 
@@ -157,9 +155,9 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
         qc2.data = qc.data
         for i in range(len(qregs)):
-            measure(qc2, qregs[i], cregs[i])
+            qc2.measure(qregs[i], cregs[i])
 
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
         job = qiskit.execute(qc2, execution_backend, shots=8192)
         counts = job.result().get_counts()  # type: dict
 
@@ -313,9 +311,9 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
         qc2.data = qc.data
         for i in range(len(qc.qregs)):
-            measure(qc2, qc.qregs[i], cregs[i])
+            qc2.measure(qc.qregs[i], cregs[i])
 
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
         job = qiskit.execute([qc2], execution_backend, shots=8192)
         counts = job.result().get_counts()  # type: dict
 
@@ -363,9 +361,9 @@ class QubitEncodingClassifierStateCircuitTests(unittest.TestCase):
 
         qc2.data = qc.data
         for i in range(len(qregs)):
-            measure(qc2, qregs[i], cregs[i])
+            qc2.measure(qregs[i], cregs[i])
 
-        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BaseBackend
+        execution_backend = qiskit.Aer.get_backend('qasm_simulator')  # type: BackendV2
         job = qiskit.execute(qc2, execution_backend, shots=8192)  # type: AerJob
         counts = job.result().get_counts()  # type: Dict[str, int]
 

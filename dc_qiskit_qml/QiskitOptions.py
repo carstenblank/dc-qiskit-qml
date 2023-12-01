@@ -19,7 +19,7 @@ class QiskitOptions(object):
 
     def __init__(self, basis_gates=None, coupling_map=None,  # circuit transpile options
                  backend_properties=None, initial_layout=None,
-                 seed_transpiler=None, optimization_level=None, pass_manager=None,
+                 seed_transpiler=None, optimization_level=None,
                  qobj_id=None, qobj_header=None, shots=1024,  # common run options
                  memory=False, max_credits=10, seed_simulator=None,
                  default_qubit_los=None, default_meas_los=None,  # schedule run options
@@ -105,11 +105,6 @@ class QiskitOptions(object):
                     3: even heavier optimization
                 If None, level 1 will be chosen as default.
 
-            pass_manager (PassManager):
-                The pass manager to use during transpilation. If this arg is present,
-                auto-selection of pass manager based on the transpile options will be
-                turned off and this pass manager will be used directly.
-
             qobj_id (str):
                 String identifier to annotate the Qobj
 
@@ -186,7 +181,6 @@ class QiskitOptions(object):
         self.initial_layout = initial_layout
         self.seed_transpiler = seed_transpiler
         self.optimization_level = optimization_level
-        self.pass_manager = pass_manager
         self.qobj_id = qobj_id
         self.qobj_header = qobj_header
         self.shots = shots

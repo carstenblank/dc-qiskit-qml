@@ -50,9 +50,8 @@ from typing import List, Union, Optional, Iterable, Sized
 import numpy as np
 import qiskit
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.measure import measure
-from qiskit.providers import BaseBackend, BaseJob, JobStatus
-from qiskit.qobj import Qobj
+from qiskit.providers import JobStatus, BackendV2, JobV1
+from qiskit.qobj import QasmQobj
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult
 from qiskit.transpiler import CouplingMap
@@ -73,7 +72,7 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
 
     def __init__(self, encoding_map, classifier_circuit_factory, backend, shots=1024, coupling_map=None,
                  basis_gates=None, theta=None, options=None):
-        # type: (EncodingMap, QmlStateCircuitBuilder, BaseBackend, int, CouplingMap, List[str], Optional[float], Optional[QiskitOptions]) -> None
+        # type: (EncodingMap, QmlStateCircuitBuilder, BackendV2, int, CouplingMap, List[str], Optional[float], Optional[QiskitOptions]) -> None
         """
         Create the classifier
 
@@ -90,7 +89,7 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
         self.encoding_map = encoding_map  # type: EncodingMap
         self.basis_gates = basis_gates  # type: List[str]
         self.shots = shots  # type: int
-        self.backend = backend  # type: BaseBackend
+        self.backend = backend  # type: BackendV2
         self.coupling_map = coupling_map  # type: CouplingMap
         self._X = np.asarray([])  # type: np.ndarray
         self._y = np.asarray([])  # type: np.ndarray
@@ -167,8 +166,8 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
             qc.barrier()
 
             # The correct label is on ancillary branch |0>!
-            measure(qc, ancillary[0], branch[0])
-            measure(qc, qlabel, clabel)
+            qc.measure(ancillary[0], branch[0])
+            qc.measure(qlabel, clabel)
 
             self._last_predict_circuits.append(qc)
 
@@ -232,7 +231,7 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
         return self.last_predict_label
 
     def predict_qasm_only(self, X):
-        # type: (QmlHadamardNeighborClassifier, Union[Sized, Iterable]) -> Qobj
+        # type: (QmlHadamardNeighborClassifier, Union[Sized, Iterable]) -> QasmQobj
         """
         Instead of predicting straight away returns the Qobj, the command object for executing
         the experiment
@@ -250,16 +249,16 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
 
         log.info("Compiling circuits...")
 
-        transpiled_qc = qiskit.transpile(self._last_predict_circuits,
-                                         backend=self.backend,
-                                         coupling_map=self.options.coupling_map,
-                                         basis_gates=self.options.basis_gates,
-                                         backend_properties=self.options.backend_properties,
-                                         initial_layout=self.options.initial_layout,
-                                         seed_transpiler=self.options.seed_transpiler,
-                                         optimization_level=self.options.optimization_level,
-                                         pass_manager=self.options.pass_manager,
-                                         callback=self.options.pass_manager)  # type: QuantumCircuit
+        transpiled_qc = qiskit.transpile(
+            self._last_predict_circuits,
+            backend=self.backend,
+            coupling_map=self.options.coupling_map,
+            basis_gates=self.options.basis_gates,
+            backend_properties=self.options.backend_properties,
+            initial_layout=self.options.initial_layout,
+            seed_transpiler=self.options.seed_transpiler,
+            optimization_level=self.options.optimization_level
+        )  # type: List[QuantumCircuit]
 
         qobj = qiskit.assemble(transpiled_qc,
                                backend=self.backend,
@@ -294,7 +293,7 @@ class QmlHadamardNeighborClassifier(ClassifierMixin, TransformerMixin):
         """
         qobj = self.predict_qasm_only(X)
         log.info("Executing circuits...")
-        job = self.backend.run(qobj)  # type: BaseJob
+        job = self.backend.run(qobj)  # type: JobV1
         async_job = AsyncPredictJob(X, job, self)  # type: AsyncPredictJob
 
         if do_async:
@@ -375,7 +374,7 @@ class AsyncPredictJob(object):
     """
 
     def __init__(self, input, job, qml):
-        # type: (AsyncPredictJob, Sized, BaseJob, QmlHadamardNeighborClassifier) -> None
+        # type: (AsyncPredictJob, Sized, JobV1, QmlHadamardNeighborClassifier) -> None
         """
         Constructs a new Wrapper
 
@@ -384,7 +383,7 @@ class AsyncPredictJob(object):
         :param qml: the classifier
         """
         self.input = input  # type: Sized
-        self.job = job  # type: BaseJob
+        self.job = job  # type: JobV1
         self.qml = qml  # type: QmlHadamardNeighborClassifier
 
     def predict_result(self):

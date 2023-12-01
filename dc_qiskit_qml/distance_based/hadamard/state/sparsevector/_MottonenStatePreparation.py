@@ -32,14 +32,14 @@ MöttönenStatePreparation
     :members:
 
 """
-from dc_qiskit_algorithms.MöttönenStatePreparation import state_prep_möttönen
+from dc_qiskit_algorithms.MottonenStatePreparation import state_prep_möttönen
 from qiskit import QuantumCircuit
 from scipy import sparse
 
 from ._QmlSparseVectorStatePreparation import QmlSparseVectorStatePreparation
 
 
-class MöttönenStatePreparation(QmlSparseVectorStatePreparation):
+class MottonenStatePreparation(QmlSparseVectorStatePreparation):
     def prepare_state(self, qc, state_vector):
         # type: (QmlSparseVectorStatePreparation, QuantumCircuit, sparse.dok_matrix) -> QuantumCircuit
         """

@@ -46,7 +46,7 @@ from . import CCXFactory
 log = logging.getLogger(__name__)
 
 
-class CCXMöttönen(CCXFactory):
+class CCXMottonen(CCXFactory):
     """
     cc-X gate implemented via the uniform rotation scheme (Möttönen et al. 2005)
     """

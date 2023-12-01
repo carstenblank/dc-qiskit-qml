@@ -1,6 +1,0 @@
-bitstring
-dc_qiskit_algorithms
-numpy
-qiskit
-scikit_learn
-scipy

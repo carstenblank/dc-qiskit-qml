@@ -16,7 +16,7 @@ python = ">=3.9,<4"
 bitstring = "*"
 qclib = "*"
 qiskit-aer = "*"
-dc-qiskit-algorithms = { git = "https://github.com/carstenblank/dc-qiskit-algorithms.git", branch = "feature/update_version"}
+dc-qiskit-algorithms = { git = "https://github.com/carstenblank/dc-qiskit-algorithms.git", branch = "master"}
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "*"
